@@ -85,16 +85,17 @@ class FeatureForm(QWidget):
         self.addText('weather', 'Weather')
 
     def setFeature(self, feat):
+        for f in self.input.values():
+            f.clear()
         if feat:
             names = feat.fields().names()
             for attr in names:
                 if attr in self.input:
-                    self.input[attr].setText(feat[attr])
+                    fv = feat[attr]
+                    if isinstance(fv, str):
+                        self.input[attr].setText(fv)
                 else:
                     self.log.info('Attribute ignored: ' + str(attr))
-        else:
-            for f in self.input.values():
-                f.clear()
 
     def clear(self):
         self.setFeature(None)
