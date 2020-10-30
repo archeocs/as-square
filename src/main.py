@@ -50,7 +50,45 @@ def getLayer(name):
         if v.isValid() and v.type() == QgsMapLayer.VectorLayer and str(v.name()).upper() == upperName:
             return v
     return None
-        
+
+class FeatureForm(QWidget):
+
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        self.lay = QFormLayout()
+        self.setLayout(self.lay)
+
+        self.input = {}
+
+        self.addText('square_id', 'Square')
+        self.addText('name', 'Name')
+        self.addText('date', 'Date')
+        self.addText('location', 'Location')
+        self.addText('area_no', 'Area Number')
+        self.lay.addRow(QRubberBand(QRubberBand.Line, self))
+        self.addText('pottery', 'Pottery')
+        self.addText('glass', 'Glass')
+        self.addText('bones', 'Bones')
+        self.addText('metal', 'Metal')
+        self.addText('flint', 'Flint')
+        self.addText('clay', 'Clay')
+        self.addText('other', 'Other')
+        self.lay.addRow(QRubberBand(QRubberBand.Line, self))
+        self.addText('chronology', 'Chronology')
+        self.addText('author', 'Author')
+        self.addText('remarks', 'Remarks')
+        self.lay.addRow(QRubberBand(QRubberBand.Line, self))
+        self.addText('people', 'People')
+        self.addText('observation', 'Observation')
+        self.addText('accesibility', 'Accessibilty')
+        self.addText('weather', 'Weather')
+
+    def addText(self, key, label):
+        txt = QLineEdit()
+        self.lay.addRow(label, txt)
+        self.input[key] = txt
+        return txt
+
 class AsquareWidget(QDockWidget):
 
     def __init__(self, log, iface, parent=None):
@@ -60,7 +98,9 @@ class AsquareWidget(QDockWidget):
         wgt = QWidget()
         lay = QVBoxLayout(self)
         self.status = QStatusBar(self)
+        self.form = FeatureForm(self)
         lay.addWidget(self.createActions(['Add', 'Analyze']))
+        lay.addWidget(self.form)
         lay.addWidget(self.status, alignment=Qt.AlignBottom)
         wgt.setLayout(lay)
         self.actionsMap['Add'].pressed.connect(self.addAction)
