@@ -53,8 +53,9 @@ def getLayer(name):
 
 class FeatureForm(QWidget):
 
-    def __init__(self, parent=None):
+    def __init__(self, log, parent=None):
         QWidget.__init__(self, parent)
+        self.log = log
         self.lay = QFormLayout()
         self.setLayout(self.lay)
 
@@ -83,6 +84,22 @@ class FeatureForm(QWidget):
         self.addText('accesibility', 'Accessibilty')
         self.addText('weather', 'Weather')
 
+    def setFeature(self, feat):
+        if feat:
+            names = feat.fields().names()
+            for attr in names:
+                if attr in self.input:
+                    self.input[attr].setText(feat[attr])
+                else:
+                    self.log.info('Attribute ignored: ' + str(attr))
+        else:
+            for f in self.input.values():
+                f.clear()
+
+    def clear(self):
+        self.setFeature(None)
+                
+        
     def addText(self, key, label):
         txt = QLineEdit()
         self.lay.addRow(label, txt)
@@ -98,7 +115,7 @@ class AsquareWidget(QDockWidget):
         wgt = QWidget()
         lay = QVBoxLayout(self)
         self.status = QStatusBar(self)
-        self.form = FeatureForm(self)
+        self.form = FeatureForm(self.log, self)
         lay.addWidget(self.createActions(['Add', 'Analyze']))
         lay.addWidget(self.form)
         lay.addWidget(self.status, alignment=Qt.AlignBottom)
@@ -116,13 +133,26 @@ class AsquareWidget(QDockWidget):
         self.sourceLayer = getLayer('grid50')
         if not self.sourceLayer:
             QgsProject.instance().layersAdded.connect(self.setSourceLayer)
-        
+        else:
+            self.sourceLayer.selectionChanged.connect(self.featuresSelected)
+
+    def featuresSelected(self, selected, deselected, clear):
+        if len(selected) == 1:
+            feat = self.sourceLayer.getFeature(selected[0])
+            self.form.setFeature(feat)
+        elif len(selected) > 1:
+            self.form.clear()
+            self.log.info('Multiselect')
+        else:
+            self.form.clear()
+            
     def setSourceLayer(self, layers):
         if self.sourceLayer:
             return
         for m in layers:
             if m.type() == QgsMapLayer.VectorLayer and str(m.name()).upper() == 'GRID50':
                 self.sourceLayer = m
+                self.sourceLayer.selectionChanged.connect(self.featuresSelected)
                 self.log.info('Source layer ' + m.name())
                 return
 
