@@ -3,6 +3,8 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from qgis.core import *
 
+TARGET_LAYER = 'AS_SQUARES'
+
 class Plugin(object):
 
     def __init__(self,iface):
@@ -60,10 +62,10 @@ class FeatureForm(QWidget):
         self.setLayout(self.lay)
 
         self.input = {}
-
+        self.feat = None
         self.addText('square_id', 'Square')
         self.addText('name', 'Name')
-        self.addText('date', 'Date')
+        self.addText('collected', 'Date')
         self.addText('location', 'Location')
         self.addText('area_no', 'Area Number')
         self.lay.addRow(QRubberBand(QRubberBand.Line, self))
@@ -87,6 +89,7 @@ class FeatureForm(QWidget):
     def setFeature(self, feat):
         for f in self.input.values():
             f.clear()
+        self.feat = feat
         if feat:
             names = feat.fields().names()
             for attr in names:
@@ -98,6 +101,7 @@ class FeatureForm(QWidget):
                     self.log.info('Attribute ignored: ' + str(attr))
 
     def clear(self):
+        self.feat = None
         self.setFeature(None)
                 
         
@@ -106,6 +110,22 @@ class FeatureForm(QWidget):
         self.lay.addRow(label, txt)
         self.input[key] = txt
         return txt
+
+    def getFeature(self, target):
+        if not self.feat:
+            return None
+        allFields = target.fields()
+        f = QgsFeature(allFields)
+        for a in allFields.names():
+            self.log.info('field ' + str(a))
+            if a.lower() in self.input:
+                ta = self.input[a.lower()].text().strip()
+                if ta:
+                    self.log.info(str(a) + ' = ' + str(ta))
+                    f[a] = ta
+        f.setGeometry(self.feat.geometry())
+        return f
+        
 
 class AsquareWidget(QDockWidget):
 
@@ -128,7 +148,7 @@ class AsquareWidget(QDockWidget):
         self.log.info('Initialized')
 
     def initLayers(self):
-        self.targetLayer = getLayer('stanowiska')
+        self.targetLayer = getLayer(TARGET_LAYER)
         if not self.targetLayer:
             QgsProject.instance().layersAdded.connect(self.setTargetLayer)
         self.sourceLayer = getLayer('grid50')
@@ -161,12 +181,26 @@ class AsquareWidget(QDockWidget):
         if self.targetLayer:
             return
         for m in layers:
-            if m.type() == QgsMapLayer.VectorLayer and str(m.name()).upper() == 'STANOWISKA':
+            if m.type() == QgsMapLayer.VectorLayer and str(m.name()).upper() == TARGET_LAYER:
                 self.targetLayer = m
                 self.log.info('Target layer ' + m.name())
                 return
-        
+
     def addAction(self):
+        self.targetLayer.startEditing()
+        fnew = self.form.getFeature(self.targetLayer)
+        if not fnew:
+            self.log.info('Nothing to add')
+            return
+        self.targetLayer.addFeature(fnew)
+        saved = self.targetLayer.commitChanges()
+        count = self.targetLayer.featureCount()
+        if saved:
+            self.log.info('Feature added: ' + str(saved) + '. Count: ' + str(count))
+        else:
+            self.log.info('Errors ' + str(self.targetLayer.commitErrors()))
+        
+    def addAction2(self):
         selected = self.sourceLayer.selectedFeatureIds()
         if len(selected) == 1:
             feat = self.sourceLayer.getFeature(selected[0])
