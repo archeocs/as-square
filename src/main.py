@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import *
 from qgis.core import *
 
 TARGET_LAYER = 'AS_SQUARES'
+TARGET_ARTIFACTS = 'AS_ARTIFACTS'
+TARGET_CONDITIONS = 'AS_CONDITIONS'
 
 class Plugin(object):
 
@@ -111,11 +113,10 @@ class FeatureForm(QWidget):
         self.input[key] = txt
         return txt
 
-    def getFeature(self, target):
-        if not self.feat:
-            return None
-        allFields = target.fields()
+    def featureFromFields(self, layer):
+        allFields = layer.fields()
         f = QgsFeature(allFields)
+        fc = 0
         for a in allFields.names():
             self.log.info('field ' + str(a))
             if a.lower() in self.input:
@@ -123,8 +124,20 @@ class FeatureForm(QWidget):
                 if ta:
                     self.log.info(str(a) + ' = ' + str(ta))
                     f[a] = ta
-        f.setGeometry(self.feat.geometry())
-        return f
+                    fc += 1
+        if fc > 0:
+            return f
+        return None
+    
+    def getFeature(self, squares, artifacts, conditions):
+        if not self.feat:
+            return None
+        square = self.featureFromFields(squares)
+        art = self.featureFromFields(artifacts)
+        cond = self.featureFromFields(conditions)
+        if square:
+            square.setGeometry(self.feat.geometry())
+        return [square, art, cond]
         
 
 class AsquareWidget(QDockWidget):
@@ -151,6 +164,9 @@ class AsquareWidget(QDockWidget):
         self.targetLayer = getLayer(TARGET_LAYER)
         if not self.targetLayer:
             QgsProject.instance().layersAdded.connect(self.setTargetLayer)
+        else:
+            self.loadTargetLayers(self.targetLayer)
+            
         self.sourceLayer = getLayer('grid50')
         if not self.sourceLayer:
             QgsProject.instance().layersAdded.connect(self.setSourceLayer)
@@ -184,22 +200,67 @@ class AsquareWidget(QDockWidget):
             if m.type() == QgsMapLayer.VectorLayer and str(m.name()).upper() == TARGET_LAYER:
                 self.targetLayer = m
                 self.log.info('Target layer ' + m.name())
+                self.loadTargetLayers(self.targetLayer)
                 return
 
+    def loadTargetLayers(self, targetBase):
+        baseUri = targetBase.dataProvider().uri()
+        self.targetArtifacts = self.loadLayer(baseUri, TARGET_ARTIFACTS)
+        self.targetConditions = self.loadLayer(baseUri, TARGET_CONDITIONS)
+
+    def loadLayer(self, uri, table):
+        copy = QgsDataSourceUri(uri)
+        copy.setTable(table)
+        copy.setGeometryColumn(None)
+        self.log.info('Loading layer ' + table + ' ' + copy.uri())
+        return QgsVectorLayer(copy.uri(), providerLib='spatialite')
+            
     def addAction(self):
-        self.targetLayer.startEditing()
-        fnew = self.form.getFeature(self.targetLayer)
-        if not fnew:
+        #self.targetLayer.startEditing()
+        tx = QgsTransaction.create([
+            self.targetLayer,
+            self.targetArtifacts,
+            self.targetConditions
+            ])
+        fnew = self.form.getFeature(self.targetLayer,
+                                    self.targetArtifacts,
+                                    self.targetConditions)
+        if not fnew or not fnew[0]:
             self.log.info('Nothing to add')
             return
-        self.targetLayer.addFeature(fnew)
-        saved = self.targetLayer.commitChanges()
+        self.startEditing(self.targetLayer,
+                          self.targetArtifacts,
+                          self.targetConditions)
+        squaresAdd = self.targetLayer.dataProvider().addFeatures([fnew[0]])
+        if squaresAdd[0]:
+            self.log.info('Added square with id ' + str(squaresAdd[1][0].id()))
+        else:
+            self.log.info('Failed ')
+        if fnew[1]:
+            fnew[1]['square'] = squaresAdd[1][0].id()
+            self.targetArtifacts.addFeature(fnew[1])
+        if fnew[2]:
+            fnew[2]['square'] = squaresAdd[1][0].id()
+            self.targetConditions.addFeature(fnew[2])
+        saved = self.commit(self.targetLayer,
+                          self.targetArtifacts,
+                          self.targetConditions)
         count = self.targetLayer.featureCount()
         if saved:
             self.log.info('Feature added: ' + str(saved) + '. Count: ' + str(count))
-        else:
-            self.log.info('Errors ' + str(self.targetLayer.commitErrors()))
-        
+            
+
+    def startEditing(self, *lays):
+        for x in lays:
+            x.startEditing()
+
+    def commit(self, *lays):
+        for x in lays:
+            if not x.commitChanges():
+                self.log.info('Errors ' + str(x.commitErrors()))
+                return False
+        return True
+            
     def addAction2(self):
         selected = self.sourceLayer.selectedFeatureIds()
         if len(selected) == 1:
