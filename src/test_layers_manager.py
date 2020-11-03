@@ -25,12 +25,22 @@ class DataProvider:
 
     def __init__(self, db):
         self._db = db
+        self.features = []
 
     def database(self):
         return self._db
 
     def uri(self):
         return QgsDataSourceUri(self._db)
+
+    def forceReoload(self):
+        pass
+    
+    def addFeatures(self, f):
+        print(f)
+        self.features.extend(f)
+        f[0].setId(1234)
+        return (True, f)
 
 RECORDS_URI = 'dbname=\'test.sqlite\' table="AS_RECORDS" sql='
     
@@ -61,6 +71,21 @@ class Layer:
 
     def dataProvider(self):
         return self._dataProvider
+
+    def addFeature(self, f):
+        self._dataProvider.addFeatures([f])
+
+    def featureCount(self):
+        return len(self._dataProvider.features)
+
+    def startEditing(self):
+        pass
+
+    def commitChanges(self):
+        return True
+
+    def reload(self):
+        pass
     
 class LayersManagerTest(unittest.TestCase):
 
@@ -141,3 +166,21 @@ class LayersManagerTest(unittest.TestCase):
         qgsProj.testAddLayer('as_records', Layer())
         self.assertTrue(isinstance(man.sources, QgsVectorLayer))
         self.assertEqual(src[0], RECORDS_URI.replace('RECORDS','SQUARES'))
+
+    def test_add_record(self):
+        def layerFactory(s):
+            return Layer(name=s)
+        qgsProj = QgsProj(layers={'as_records': Layer(), 'grid50': Layer(name='grid50')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
+
+        man.addRecord(self.feat(), self.feat())
+
+        self.assertEqual(len(man.sources.dataProvider().features), 1)
+        self.assertEqual(len(man.squares.dataProvider().features), 1)
+        self.assertEqual(man.sources.dataProvider().features[0]['square'], 1234)
+
+    def feat(self):
+        f = QgsField('square', typeName='int')
+        ff = QgsFields()
+        ff.append(f)
+        return QgsFeature(ff)

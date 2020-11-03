@@ -18,6 +18,22 @@ def sameDb(v1, v2):
     c2 = v2.dataProvider().uri().database()
     return c1 == c2
 
+class TxManager:
+
+    def __init__(self):
+        self.layers = []
+
+    def begin(self):
+        for e in self.layers:
+            e.startEditing()
+
+    def commit(self):
+        for x in self.layers:
+            if not x.commitChanges():
+                self.log.info('Errors ' + str(x.commitErrors()))
+                return False
+        return True
+
 class LayersManager:
 
     def __init__(self, qgsProj, log, layFactory):
@@ -26,6 +42,7 @@ class LayersManager:
         self.managed = set([])
         self.handlers = {}
         self.layFactory = layFactory
+        self.txManager = TxManager()
         self.initRecordsLayer()
         self.initGridLayer()
 
@@ -43,6 +60,8 @@ class LayersManager:
             self.squares = self.getOrLoad(SQUARES_LAYER, self.records)
             self.sources = self.getOrLoad(SOURCES_LAYER, self.records)
             self.managed.add(VIEW_LAYER)
+            self.txManager.layers.append(self.squares)
+            self.txManager.layers.append(self.sources)
             return True
         return False
 
@@ -96,3 +115,22 @@ class LayersManager:
             if v.isValid() and isVector(v) and equalIgnoreCase(name, v.name()) and (not otherLayer or sameDb(otherLayer, v)):
                 return v
         return None
+
+    def addRecord(self, square, sourcesFeat):
+        self.txManager.begin()
+        squaresAdd = self.squares.dataProvider().addFeatures([square])
+        squareId = None
+        if squaresAdd[0]:
+            squareId = squaresAdd[1][0].id()
+            self.log.info('Added square with id {}', squareId)
+        else:
+            self.log.info('Adding Failed')
+        if sourcesFeat:
+            sourcesFeat['square'] = squareId
+            self.sources.addFeature(sourcesFeat)
+        saved = self.txManager.commit()
+        self.records.dataProvider().forceReload()
+        count = self.records.featureCount()
+        sqCount = self.squares.featureCount()
+        if saved:
+            self.log.info('Feature added: {}. Rec count: {}, Squares count: {} ', str(saved),  count, sqCount)
