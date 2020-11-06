@@ -17,5 +17,5 @@ def authorName():
     return u"Milosz Piglas"
 
 def classFactory(iface):
-    import as_square
-    return as_square.Plugin(iface)
+    import main
+    return main.Plugin(iface)

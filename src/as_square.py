@@ -34,11 +34,11 @@ class Plugin:
         self.iface.removeToolBarIcon(self.qgisAction)
         
     def run(self):
-        self.start(self.iface.mainWindow(), iface=self.iface)
+        start(self.iface.mainWindow(), iface=self.iface)
 
-    def start(self, parent, iface):
-        log = QgsLogAdapter('as-square')
-        panel = AsquareWidget(log, iface, parent)
-        iface.currentLayerChanged.connect(lambda x: print(x))
-        iface.addDockWidget( Qt.RightDockWidgetArea, panel )
+def start(parent, iface):
+    log = QgsLogAdapter('as-square')
+    panel = AsquareWidget(log, iface, parent)
+    iface.currentLayerChanged.connect(lambda x: print(x))
+    iface.addDockWidget( Qt.RightDockWidgetArea, panel )
 

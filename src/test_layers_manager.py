@@ -9,7 +9,7 @@ class QgsProj:
     def __init__(self, layers):
         self.layers = layers
         self._handlers = {}
-        self.layerAdded = self
+        self.layersAdded = self
 
     def connect(self, fun):
         self._handlers['layers_added'] = fun
@@ -33,7 +33,7 @@ class DataProvider:
     def uri(self):
         return QgsDataSourceUri(self._db)
 
-    def forceReoload(self):
+    def forceReload(self):
         pass
     
     def addFeatures(self, f):

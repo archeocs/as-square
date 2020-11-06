@@ -4,7 +4,7 @@ from functools import partial
 SQUARES_LAYER = 'AS_SQUARES'
 SOURCES_LAYER = 'AS_SOURCES'
 VIEW_LAYER = 'AS_RECORDS'
-GRID_LAYER = 'GRID50'
+GRID_LAYER = 'GRID_50_M'
 
 
 def isVector(lay):
@@ -48,11 +48,11 @@ class LayersManager:
 
     def initGridLayer(self):
         if not self.initGridEvents():
-            self.qgsProj.layerAdded.connect(partial(self.onLayerLoaded, name=GRID_LAYER, initFunc=self.initGridEvents))
+            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_LAYER, initFunc=self.initGridEvents))
         
     def initRecordsLayer(self):
         if not self.initDataLayers():
-            self.qgsProj.layerAdded.connect(partial(self.onLayerLoaded, name=VIEW_LAYER, initFunc=self.initDataLayers))
+            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=VIEW_LAYER, initFunc=self.initDataLayers))
 
     def initDataLayers(self):        
         self.records = self.getLayer(VIEW_LAYER)
@@ -70,11 +70,13 @@ class LayersManager:
         if self.grid:
             self.managed.add(GRID_LAYER)
             self.grid.selectionChanged.connect(self.gridSelected)
+            self.log.info('Source layer {} initialized', GRID_LAYER)
             return True
         return False
 
     def gridSelected(self, selected, deselected, clear):
         if len(selected) == 1:
+            self.log.info('Selected')
             feat = self.grid.getFeature(selected[0])
             self.emit('grid_selected', feat)
         elif len(selected) > 1:
@@ -114,6 +116,7 @@ class LayersManager:
         for v in self.qgsProj.mapLayers().values():
             if v.isValid() and isVector(v) and equalIgnoreCase(name, v.name()) and (not otherLayer or sameDb(otherLayer, v)):
                 return v
+        self.log.info('Layer {} not found', name)
         return None
 
     def addRecord(self, square, sourcesFeat):
