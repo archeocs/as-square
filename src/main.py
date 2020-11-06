@@ -107,6 +107,8 @@ class FeatureForm(QWidget):
         art = self.featureFromFields(artifacts)
         if square:
             square.setGeometry(self.feat.geometry())
+            self.log.info('Set geometry {}',
+                          square.geometry().asWkt())
         return [square, art]
         
 
