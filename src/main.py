@@ -5,11 +5,6 @@ from qgis.core import *
 from functools import partial
 from layers_manager import LayersManager
 
-SQUARES_LAYER = 'AS_SQUARES'
-SOURCES_LAYER = 'AS_SOURCES'
-VIEW_LAYER = 'AS_RECORDS'
-GRID_LAYER = 'GRID50'
-
 class LogAdapter:
 
     def info(self, message, *args):
@@ -41,10 +36,9 @@ class FeatureForm(QWidget):
         self.input = {}
         self.feat = None
         self.addText('square_id', 'Square')
-        self.addText('name', 'Name')
-        self.addText('collected', 'Date')
-        self.addText('location', 'Location')
-        self.addText('area_no', 'Area Number')
+        self.addText('survey_date', 'Date')
+        self.addText('azp', 'AZP number')
+        self.addText('people', 'People')
         self.lay.addRow(QRubberBand(QRubberBand.Line, self))
         self.addText('pottery', 'Pottery')
         self.addText('glass', 'Glass')
@@ -53,15 +47,17 @@ class FeatureForm(QWidget):
         self.addText('flint', 'Flint')
         self.addText('clay', 'Clay')
         self.addText('other', 'Other')
-        self.lay.addRow(QRubberBand(QRubberBand.Line, self))
         self.addText('chronology', 'Chronology')
+        self.addText('culture', 'Culture')
         self.addText('author', 'Author')
-        self.addText('remarks', 'Remarks')
+        self.addText('s_remarks', 'Source remarks')
         self.lay.addRow(QRubberBand(QRubberBand.Line, self))
-        self.addText('people', 'People')
         self.addText('observation', 'Observation')
-        self.addText('accesibility', 'Accessibilty')
+        self.addText('temperature', 'Temperature')
         self.addText('weather', 'Weather')
+        self.addText('plow_depth', 'Plow Depth')
+        self.addText('agro_treatements', 'Agricultural Treatments')
+        self.addText('remarks', 'Remarks')
 
     def setFeature(self, feat):
         for f in self.input.values():
@@ -153,21 +149,50 @@ class AsquareWidget(QDockWidget):
             self.actionsMap[a] = btn
         return actionsGroup
 
-def start(parent, iface=None, app=None):
-    log = None
-    if iface:
-        log = QgsLogAdapter('Asquare')
-    else:
-        log = StdOutLogAdapter()
+class QgsLogAdapter(LogAdapter):
+
+    def __init__(self, name):
+        self.name = name
+
+    def info(self, message, *args):
+        msg = message
+        if args:
+            msg = message.format(*args)
+        QgsMessageLog.logMessage(msg, self.name, level=Qgis.Info)
+
+class Plugin:
+
+    def __init__(self,iface):
+        self.iface = iface
+    
+    def initGui(self):
+        self.qgisAction = QAction("as-square", self.iface.mainWindow())
+        self.qgisAction.triggered.connect(self.run)
+
+        self.iface.addToolBarIcon(self.qgisAction)
+        self.iface.addPluginToMenu("as-square",self.qgisAction)
+
+    def unload(self):
+        self.iface.removePluginMenu('as-square', self.qgisAction)
+        self.iface.removeToolBarIcon(self.qgisAction)
+        
+    def run(self):
+        self.mainWidget = start_plugin(self.iface.mainWindow(), iface=self.iface)
+
+def start_plugin(parent, iface):
+    log = QgsLogAdapter('as-square')
     panel = AsquareWidget(log, iface, parent)
-    if iface:
-        iface.currentLayerChanged.connect(lambda x: print(x))
-        iface.addDockWidget( Qt.RightDockWidgetArea, panel )
-    elif app:
-        window = QMainWindow()
-        window.setCentralWidget(panel)
-        window.show()
-        app.exec_()
+    iface.currentLayerChanged.connect(lambda x: print(x))
+    iface.addDockWidget( Qt.RightDockWidgetArea, panel )
+    return panel
+    
+def start(parent, iface=None, app=None):
+    log = StdOutLogAdapter()
+    panel = AsquareWidget(log, iface, parent)
+    window = QMainWindow()
+    window.setCentralWidget(panel)
+    window.show()
+    app.exec_()
     return panel
 
 def main():
