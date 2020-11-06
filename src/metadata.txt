@@ -1,17 +1,15 @@
-; the next section is mandatory
-
 [general]
-name=Asquare
+name=as-square
 email=milosz@archeocs.com
 author=Milosz Piglas
-qgisMinimumVersion=3.0
-description=Archeologiczne Zdjecie Polski w QGIS
-about=Archeologiczne Zdjecie Polski w QGIS
-version=20160217
+qgisMinimumVersion=3.10
+description=Archeological Survey Squared
+about=Archeological Survey Suared
+version=0.1
 ; end of mandatory metadata
 
 ; these metadata can be empty, they will eventually become mandatory.
-homepage=http://qazp.archeocs.com
+homepage=http://github.com/archeocs/as-square
 tracker=
 repository=
 icon=

@@ -10,28 +10,6 @@ SOURCES_LAYER = 'AS_SOURCES'
 VIEW_LAYER = 'AS_RECORDS'
 GRID_LAYER = 'GRID50'
 
-class Plugin(object):
-
-    def __init__(self,iface):
-        self.iface = iface
-    
-    def initGui(self):
-        self.qgisAction = QAction("Asquare", self.iface.mainWindow())
-        self.qgisAction.setWhatsThis("Layers List")
-        self.qgisAction.setStatusTip("Layers List")
-        self.qgisAction.triggered.connect(self.run)
-
-        self.iface.addToolBarIcon(self.qgisAction)
-        self.iface.addPluginToMenu("Asquare",self.qgisAction)
-
-    def unload(self):
-        self.iface.removePluginMenu('Asquare', self.qgisAction)
-        self.iface.removeToolBarIcon(self.qgisAction)
-        #self.iface.removeDocWidget(self.dockWidget)
-        
-    def run(self):
-        self.dockWidget = start(self.iface.mainWindow(), iface=self.iface)
-
 class LogAdapter:
 
     def info(self, message, *args):
@@ -44,17 +22,6 @@ class StdOutLogAdapter(LogAdapter):
             print(message)
         else:
             print(message.format(*args))
-
-class QgsLogAdapter(LogAdapter):
-
-    def __init__(self, name):
-        self.name = name
-
-    def info(self, message, *args):
-        msg = message
-        if args:
-            msg = message.format(*args)
-        QgsMessageLog.logMessage(msg, self.name, level=Qgis.Info)
 
 def getLayer(name):
     proj = QgsProject.instance()

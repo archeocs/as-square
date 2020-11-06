@@ -2,20 +2,20 @@ import sys
 sys.path.extend(__path__)
 
 def name():
-    return "Asquare"
+    return "as-square"
 
 def description():
-    return "List of opened layers"
+    return "Archeological Survey Squared"
 
 def version():
     return "0.1"
 
 def qgisMinimumVersion():
-    return "1.7"
+    return "3.10"
 
 def authorName():
     return u"Milosz Piglas"
 
 def classFactory(iface):
-    import main
-    return main.Plugin(iface)
+    import as_square
+    return as_square.Plugin(iface)
