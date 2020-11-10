@@ -5,7 +5,7 @@ author=Milosz Piglas
 qgisMinimumVersion=3.10
 description=Archeological Survey Squared
 about=Archeological Survey Suared
-version=0.1
+version=0.2
 ; end of mandatory metadata
 
 ; these metadata can be empty, they will eventually become mandatory.
