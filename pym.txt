@@ -1,0 +1,5 @@
+1. Generate sources from template
+2. Run tests && lint && etc.
+3. Create distribution
+4. Package
+5. Install (in local QGIS)
