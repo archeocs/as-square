@@ -18,14 +18,6 @@ class StdOutLogAdapter(LogAdapter):
         else:
             print(message.format(*args))
 
-def getLayer(name):
-    proj = QgsProject.instance()
-    upperName = name.upper()
-    for v in proj.mapLayers().values():
-        if v.isValid() and v.type() == QgsMapLayer.VectorLayer and str(v.name()).upper() == upperName:
-            return v
-    return None
-
 class FeatureForm(QWidget):
 
     def __init__(self, log, parent=None):
@@ -70,8 +62,6 @@ class FeatureForm(QWidget):
                     fv = feat[attr]
                     if isinstance(fv, str):
                         self.input[attr].setText(fv)
-                else:
-                    self.log.info('Attribute ignored: ' + str(attr))
 
     def clear(self):
         self.feat = None
@@ -89,7 +79,6 @@ class FeatureForm(QWidget):
         f = QgsFeature(allFields)
         fc = 0
         for a in allFields.names():
-            self.log.info('field ' + str(a))
             if a.lower() in self.input:
                 ta = self.input[a.lower()].text().strip()
                 if ta:

@@ -57,7 +57,7 @@ class LayersManager:
     def initDataLayers(self):        
         self.records = self.getLayer(VIEW_LAYER)
         if self.records:
-            self.squares = self.getOrLoad(SQUARES_LAYER, self.records)
+            self.squares = self.getOrLoad(SQUARES_LAYER, self.records, 'geometry')
             self.sources = self.getOrLoad(SOURCES_LAYER, self.records)
             self.managed.add(VIEW_LAYER)
             self.txManager.layers.append(self.squares)
@@ -96,17 +96,17 @@ class LayersManager:
             self.log.info('Layer {} is loaded. Initialization started', name)
             initFunc()
 
-    def getOrLoad(self, name, reference):
+    def getOrLoad(self, name, reference, geocol=None):
         v = self.getLayer(name, reference)
         if v:
             return v
         else:
-            return self.loadLayer(reference.dataProvider().uri(), name)
+            return self.loadLayer(reference.dataProvider().uri(), name, geocol)
 
-    def loadLayer(self, uri, table):
+    def loadLayer(self, uri, table, geocol=None):
         copy = QgsDataSourceUri(uri)
         copy.setTable(table)
-        copy.setGeometryColumn(None)
+        copy.setGeometryColumn(geocol)
         self.log.info('Loading layer ' + table + ' ' + copy.uri())
         return self.layFactory(copy.uri())
         
@@ -127,7 +127,7 @@ class LayersManager:
             squareId = squaresAdd[1][0].id()
             self.log.info('Added square with id {}', squareId)
         else:
-            self.log.info('Adding Failed')
+            self.log.info('Adding to {} Failed {}', self.squares.dataProvider().uri().uri(), square.geometry().asWkt())
         if sourcesFeat:
             sourcesFeat['square'] = squareId
             self.sources.addFeature(sourcesFeat)
