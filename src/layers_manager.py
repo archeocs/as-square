@@ -5,7 +5,7 @@ SQUARES_LAYER = 'AS_SQUARES'
 SOURCES_LAYER = 'AS_SOURCES'
 VIEW_LAYER = 'AS_RECORDS'
 GRID_LAYER = 'GRID_50_M'
-
+GRID_10M_LAYER = 'GRID_10_M'
 
 def isVector(lay):
     return lay.type() == QgsMapLayer.VectorLayer
@@ -41,14 +41,17 @@ class LayersManager:
         self.log = log
         self.managed = set([])
         self.handlers = {}
+        self.grid = {}
         self.layFactory = layFactory
         self.txManager = TxManager()
         self.initRecordsLayer()
         self.initGridLayer()
 
     def initGridLayer(self):
-        if not self.initGridEvents():
-            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_LAYER, initFunc=self.initGridEvents))
+        if not self.initEventsGrid50m():
+            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_LAYER, initFunc=self.initEventsGrid50m))
+        if not self.initEventsGrid10m():
+            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_10M_LAYER, initFunc=self.initEventsGrid10m))
         
     def initRecordsLayer(self):
         if not self.initDataLayers():
@@ -65,19 +68,25 @@ class LayersManager:
             return True
         return False
 
-    def initGridEvents(self):
-        self.grid = self.getLayer(GRID_LAYER)
-        if self.grid:
-            self.managed.add(GRID_LAYER)
-            self.grid.selectionChanged.connect(self.gridSelected)
-            self.log.info('Source layer {} initialized', GRID_LAYER)
+    def initEventsGrid50m(self):
+        return self.initGridEvents(GRID_LAYER)
+
+    def initEventsGrid10m(self):
+        return self.initGridEvents(GRID_10M_LAYER)
+    
+    def initGridEvents(self, name):
+        self.grid[name] = self.getLayer(name)
+        if self.grid.get(name, None):
+            self.managed.add(name)
+            self.grid[name].selectionChanged.connect(partial(self.gridSelected, layer=name))
+            self.log.info('Source layer {} initialized', name)
             return True
         return False
 
-    def gridSelected(self, selected, deselected, clear):
+    def gridSelected(self, selected, deselected, clear, layer):
         if len(selected) == 1:
             self.log.info('Selected')
-            feat = self.grid.getFeature(selected[0])
+            feat = self.grid[layer].getFeature(selected[0])
             self.emit('grid_selected', feat)
         elif len(selected) > 1:
             self.log.info('Multiselect')
@@ -92,7 +101,7 @@ class LayersManager:
         if name in self.managed:
             return
         matching = filter(lambda v: equalIgnoreCase(v.name(), name) and isVector(v), layers)
-        if matching and initFunc:
+        if len(list(matching)) > 0 and initFunc:
             self.log.info('Layer {} is loaded. Initialization started', name)
             initFunc()
 
