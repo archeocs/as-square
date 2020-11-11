@@ -1,9 +1,9 @@
 <?xml version = '1.0' encoding = 'ISO-8859-1'?>
 <?xml-stylesheet type='text/xsl' href='plugins.xsl' ?>
 <plugins>
-<pyqgis_plugin name='as-square' version='0.3'>
+<pyqgis_plugin name='as-square' version='@__PLUGIN_VERSION__@'>
     <description>Archaeological Survey Squared</description>
-    <version>0.3</version>
+    <version>@__PLUGIN_VERSION__@</version>
     <qgis_minimum_version>3.10</qgis_minimum_version>
     <homepage>https://github.com/archeocs/as-square</homepage>
 
@@ -12,7 +12,7 @@
     <download_url>https://github.com/archeocs/as-square/releases/latest/download/as-square.zip</download_url>
     <uploaded_by>Milosz Piglas</uploaded_by>
     <create_date>2020-11-06</create_date>
-    <update_date>2020-11-11</update_date>
+    <update_date>2020-11-10</update_date>
 
 </pyqgis_plugin>
    

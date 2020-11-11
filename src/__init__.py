@@ -8,7 +8,7 @@ def description():
     return "Archeological Survey Squared"
 
 def version():
-    return "0.3"
+    return "@__PLUGIN_VERSION__@"
 
 def qgisMinimumVersion():
     return "3.10"
