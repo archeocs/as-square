@@ -4,7 +4,7 @@ email=milosz@archeocs.com
 author=Milosz Piglas
 qgisMinimumVersion=3.10
 description=Archeological Survey Squared
-about=Archeological Survey Suared
+about=Archeological Survey Squared
 version=@__PLUGIN_VERSION__@
 ; end of mandatory metadata
 
