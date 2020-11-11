@@ -11,7 +11,7 @@ jobs:
       - name: Check QGIS installation
         run: python3 -c "from qgis import core; print(core.__name__)"
       - name: Checkout code
-        uses: action/checkout@v2
+        uses: actions/checkout@v2
       - name: Build package
         run: make package
       - name: Create Release
