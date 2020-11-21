@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 from qgis.core import *
 from functools import partial
 from layers_manager import LayersManager
+from item_view import ItemFormWidget
 
 class LogAdapter:
 
@@ -17,6 +18,7 @@ class StdOutLogAdapter(LogAdapter):
             print(message)
         else:
             print(message.format(*args))
+
 
 class FeatureForm(QWidget):
 
@@ -66,8 +68,7 @@ class FeatureForm(QWidget):
     def clear(self):
         self.feat = None
         self.setFeature(None)
-                
-        
+
     def addText(self, key, label):
         txt = QLineEdit()
         self.lay.addRow(label, txt)
@@ -101,6 +102,72 @@ class FeatureForm(QWidget):
                           square.geometry().asWkt())
         return [square, art]
         
+
+def formWidget(parent):
+    form = ItemFormWidget(parent)
+    form.addText('square_id', 'Square')
+    form.addText('survey_date', 'Date')
+    form.addText('azp', 'AZP number')
+    form.addText('people', 'People')
+       
+    form.addText('pottery', 'Pottery')
+    form.addText('glass', 'Glass')
+    form.addText('bones', 'Bones')
+    form.addText('metal', 'Metal')
+    form.addText('flint', 'Flint')
+    form.addText('clay', 'Clay')
+    form.addText('other', 'Other')
+    form.addText('chronology', 'Chronology')
+    form.addText('culture', 'Culture')
+    form.addText('author', 'Author')
+    form.addText('s_remarks', 'Source remarks')
+
+    form.addText('observation', 'Observation')
+    form.addText('temperature', 'Temperature')
+    form.addText('weather', 'Weather')
+    form.addText('plow_depth', 'Plow Depth')
+    form.addText('agro_treatements', 'Agricultural Treatments')
+    form.addText('remarks', 'Remarks')
+    return form
+
+class AsSquareWidget(QDockWidget):
+    def __init__(self, log, iface, parent=None):
+        QDockWidget.__init__(self, parent=parent)
+        self.log = log
+        self.iface = iface
+        wgt = QWidget()
+        lay = QVBoxLayout(self)
+        self.status = QStatusBar(self)
+        self.form = formWidget(wgt)
+        lay.addWidget(self.createActions(['Add']))
+        lay.addWidget(self.form)
+        lay.addWidget(self.status, alignment=Qt.AlignBottom)
+        wgt.setLayout(lay)
+        self.actionsMap['Add'].pressed.connect(self.addAction)
+
+        self.setWidget(wgt)
+
+        self.layersMgr = LayersManager(QgsProject.instance(),
+                                       self.log,
+                                       lambda x: QgsVectorLayer(x, providerLib='spatialite'))
+        self.layersMgr.handlers['grid_selected'] = self.form.setItem
+        self.log.info('Initialized')
+
+    def addAction(self):
+        fnew = self.form.getFeature(self.layersMgr.squares,
+                                    self.layersMgr.sources)
+        if not fnew or not fnew[0]:
+            self.log.info('Nothing to add')
+            return
+        self.layersMgr.addRecord(fnew[0], fnew[1])
+
+    def createActions(self, actions):
+        self.actionsMap = {}
+        actionsGroup = QDialogButtonBox(self)
+        for a in actions:
+            btn = actionsGroup.addButton(a,QDialogButtonBox.ActionRole)
+            self.actionsMap[a] = btn
+        return actionsGroup
 
 class AsquareWidget(QDockWidget):
 
@@ -173,7 +240,7 @@ class Plugin:
 
 def start_plugin(parent, iface):
     log = QgsLogAdapter('as-square')
-    panel = AsquareWidget(log, iface, parent)
+    panel = AsSquareWidget(log, iface, parent)
     iface.currentLayerChanged.connect(lambda x: print(x))
     iface.addDockWidget( Qt.RightDockWidgetArea, panel )
     return panel
