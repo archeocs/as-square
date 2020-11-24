@@ -103,8 +103,8 @@ class FeatureForm(QWidget):
         return [square, art]
         
 
-def formWidget(parent):
-    form = ItemFormWidget(parent)
+def formWidget(log, parent):
+    form = ItemFormWidget(log, parent)
     form.addText('square_id', 'Square')
     form.addText('survey_date', 'Date')
     form.addText('azp', 'AZP number')
@@ -138,7 +138,7 @@ class AsSquareWidget(QDockWidget):
         wgt = QWidget()
         lay = QVBoxLayout(self)
         self.status = QStatusBar(self)
-        self.form = formWidget(wgt)
+        self.form = formWidget(log, wgt)
         lay.addWidget(self.createActions(['Add']))
         lay.addWidget(self.form)
         lay.addWidget(self.status, alignment=Qt.AlignBottom)
@@ -150,7 +150,7 @@ class AsSquareWidget(QDockWidget):
         self.layersMgr = LayersManager(QgsProject.instance(),
                                        self.log,
                                        lambda x: QgsVectorLayer(x, providerLib='spatialite'))
-        self.layersMgr.handlers['grid_selected'] = self.form.setItem
+        self.layersMgr.handlers['item_selected'] = self.form.setItem
         self.log.info('Initialized')
 
     def addAction(self):

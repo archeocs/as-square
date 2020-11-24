@@ -44,16 +44,21 @@ class DataProvider:
         return (True, f)
 
 RECORDS_URI = 'dbname=\'test.sqlite\' table="AS_RECORDS" (geometry) sql='
-    
+
 class Layer:
 
-    def __init__(self, valid=True, type=QgsMapLayer.VectorLayer, name='AS_records', db=RECORDS_URI):
+    def __init__(self, valid=True,
+                 type=QgsMapLayer.VectorLayer,
+                 name='AS_records',
+                 db=RECORDS_URI,
+                 fields = []):
         self._valid = valid
         self._type = type
         self._name = name
         self._dataProvider = DataProvider(db)
         self.selectionChanged = self
         self.handlers = {}
+        self._fields = fields
 
     def getFeature(self, args):
         return args
@@ -87,44 +92,58 @@ class Layer:
 
     def reload(self):
         pass
-    
+
+    def fields(self):
+        return self
+
+    def names(self):
+        return self._fields
+
+def defaultLayerFactory(name):
+    return Layer(name=name)
+
 class LayersManagerTest(unittest.TestCase):
 
     def test_init_layer_is_loaded(self):
         qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_50_m': Layer(name='grid_50_m')})
-        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: print(x))
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
         self.assertEqual(man.managed, {'AS_RECORDS', 'GRID_50_M'})
 
     def test_init_layer_selection_event_attached(self):
         qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_50_m': Layer(name='grid_50_m')})
         feats = []
-        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: print(x))
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
         man.handlers['grid_selected'] = lambda x: feats.append(x)
 
-        qgsProj.layers['grid_50_m'].handlers['selection_changed'](['test_selected_feature'],'b','c')
+        testFeat = self.feat()
+        qgsProj.layers['grid_50_m'].handlers['selection_changed']([testFeat],'b','c')
 
-        self.assertEqual(feats, ['test_selected_feature'])
+        self.assertEqual(feats[0].id(), testFeat.id())
 
     def test_init_layer_selection_event_attached_grid_10_m(self):
         qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_10_m': Layer(name='grid_10_m')})
         feats = []
-        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: print(x))
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
         man.handlers['grid_selected'] = lambda x: feats.append(x)
 
-        qgsProj.layers['grid_10_m'].handlers['selection_changed'](['test_selected_feature'],'b','c')
+        testFeat = self.feat()
+        qgsProj.layers['grid_10_m'].handlers['selection_changed']([testFeat],'b','c')
 
-        self.assertEqual(feats, ['test_selected_feature'])
+        self.assertEqual(feats, [testFeat])
 
     def test_init_layer_selection_event_attached_all_grids(self):
         qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_10_m': Layer(name='grid_10_m'), 'grid_50_m': Layer(name='grid_50_m')})
         feats = []
-        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: print(x))
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
         man.handlers['grid_selected'] = lambda x: feats.append(x)
 
-        qgsProj.layers['grid_10_m'].handlers['selection_changed'](['test_selected_feature'],'b','c')
-        qgsProj.layers['grid_50_m'].handlers['selection_changed'](['test_selected_feature_50'],'b','c')
+        feat10 = self.feat()
+        feat50 = self.feat()
 
-        self.assertEqual(feats, ['test_selected_feature', 'test_selected_feature_50'])
+        qgsProj.layers['grid_10_m'].handlers['selection_changed']([feat10],'b','c')
+        qgsProj.layers['grid_50_m'].handlers['selection_changed']([feat50],'b','c')
+
+        self.assertEqual(feats, [feat10, feat50])
     
     def test_init_layer_sources_loaded(self):
         src = []
@@ -154,7 +173,7 @@ class LayersManagerTest(unittest.TestCase):
 
     def test_records_added_layer_loaded(self):
         qgsProj = QgsProj(layers={'grid_50_m': Layer(name='grid_50_m')})
-        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: print(x))
+        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: Layer(name=x) )
 
         qgsProj.testAddLayer('as_records', Layer())
         
@@ -162,7 +181,7 @@ class LayersManagerTest(unittest.TestCase):
 
     def test_grid_added_layer_loaded(self):
         qgsProj = QgsProj(layers={'as_records': Layer()})
-        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: print(x))
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
 
         qgsProj.testAddLayer('Grid_50_m', Layer(name='Grid_50_m'))
         
@@ -170,7 +189,7 @@ class LayersManagerTest(unittest.TestCase):
 
     def test_grid_10_added_layer_loaded(self):
         qgsProj = QgsProj(layers={'as_records': Layer()})
-        man = LayersManager(qgsProj, StdOutLogAdapter(), lambda x: print(x))
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
 
         qgsProj.testAddLayer('Grid_10_m', Layer(name='Grid_10_m'))
         
@@ -217,4 +236,6 @@ class LayersManagerTest(unittest.TestCase):
         f = QgsField('square', typeName='int')
         ff = QgsFields()
         ff.append(f)
-        return QgsFeature(ff)
+        qf = QgsFeature(ff)
+        qf.setId(12345)
+        return qf

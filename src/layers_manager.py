@@ -1,6 +1,8 @@
 from qgis.core import *
 from functools import partial
 
+from items import *
+
 SQUARES_LAYER = 'AS_SQUARES'
 SOURCES_LAYER = 'AS_SOURCES'
 VIEW_LAYER = 'AS_RECORDS'
@@ -44,6 +46,8 @@ class LayersManager:
         self.grid = {}
         self.layFactory = layFactory
         self.txManager = TxManager()
+        self.baseAttrs = {}
+        ###################
         self.initRecordsLayer()
         self.initGridLayer()
 
@@ -62,6 +66,8 @@ class LayersManager:
         if self.records:
             self.squares = self.getOrLoad(SQUARES_LAYER, self.records, 'geometry')
             self.sources = self.getOrLoad(SOURCES_LAYER, self.records)
+            self.addLayerAttrs(self.squares)
+            self.addLayerAttrs(self.sources)
             self.managed.add(VIEW_LAYER)
             self.txManager.layers.append(self.squares)
             self.txManager.layers.append(self.sources)
@@ -83,19 +89,32 @@ class LayersManager:
             return True
         return False
 
+    def toItem(self, feat):
+        self.log.info('{}', self.baseAttrs)
+        names = feat.fields().names()
+        base = GeoItem(dict(self.baseAttrs), feat.geometry())
+        for n in names:
+            base.setValue(n, feat[n])
+        self.log.info('Item {}', base.attrs)
+        return base
+
     def gridSelected(self, selected, deselected, clear, layer):
         if len(selected) == 1:
             self.log.info('Selected')
             feat = self.grid[layer].getFeature(selected[0])
             self.emit('grid_selected', feat)
+            self.emit('item_selected', self.toItem(feat))
         elif len(selected) > 1:
             self.log.info('Multiselect')
             self.emit('grid_selected', None)
+            self.emit('item_selected', None)
         else:
             self.emit('grid_selected', None)
+            self.emit('item_selected', None)
 
     def emit(self, event, data):
-        self.handlers[event](data)
+        if event in self.handlers:
+            self.handlers[event](data)
             
     def onLayerLoaded(self, layers, name, initFunc):
         if name in self.managed:
@@ -105,21 +124,26 @@ class LayersManager:
             self.log.info('Layer {} is loaded. Initialization started', name)
             initFunc()
 
+    def addLayerAttrs(self, layer):
+        for f in layer.fields().names():
+            self.baseAttrs[f.lower()] = None
+
     def getOrLoad(self, name, reference, geocol=None):
         v = self.getLayer(name, reference)
-        if v:
-            return v
-        else:
-            return self.loadLayer(reference.dataProvider().uri(), name, geocol)
+        if not v:
+            v = self.loadLayer(reference.dataProvider().uri(), name, geocol)
+        return v
 
     def loadLayer(self, uri, table, geocol=None):
         copy = QgsDataSourceUri(uri)
         copy.setTable(table)
         copy.setGeometryColumn(geocol)
         self.log.info('Loading layer ' + table + ' ' + copy.uri())
-        return self.layFactory(copy.uri())
-        
-    
+        v = self.layFactory(copy.uri())
+        if not v:
+            raise Exception('Initialization with uri {} failed. Check layer factory'.format(copy.uri()))
+        return v
+
     def getLayer(self, name, otherLayer=None):
         stdName = name.upper()
         for v in self.qgsProj.mapLayers().values():
@@ -136,7 +160,9 @@ class LayersManager:
             squareId = squaresAdd[1][0].id()
             self.log.info('Added square with id {}', squareId)
         else:
-            self.log.info('Adding to {} Failed {}', self.squares.dataProvider().uri().uri(), square.geometry().asWkt())
+            self.log.info('Adding to {} Failed {}',
+                          self.squares.dataProvider().uri().uri(),
+                          square.geometry().asWkt())
         if sourcesFeat:
             sourcesFeat['square'] = squareId
             self.sources.addFeature(sourcesFeat)

@@ -42,6 +42,22 @@ class ItemAttr:
         self.value = value
         self.readOnly = readOnly
 
+class GeoItem:
+
+    def __init__(self, attrs, geom):
+        self.attrs = attrs
+        self.geometry = geom
+
+    def value(self, name):
+        if name in self.attrs:
+            return self.attrs[name]
+        return None
+
+    def setValue(self, name, v):
+        if name in self.attrs:
+            self.attrs[name] = v
+
+
 class Item:
 
     def __init__(self, attrs):
