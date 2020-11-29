@@ -126,7 +126,7 @@ def formWidget(log, parent):
     form.addText('temperature', 'Temperature')
     form.addText('weather', 'Weather')
     form.addText('plow_depth', 'Plow Depth')
-    form.addText('agro_treatements', 'Agricultural Treatments')
+    form.addText('agro_treatments', 'Agricultural Treatments')
     form.addText('remarks', 'Remarks')
     return form
 
@@ -139,11 +139,12 @@ class AsSquareWidget(QDockWidget):
         lay = QVBoxLayout(self)
         self.status = QStatusBar(self)
         self.form = formWidget(log, wgt)
-        lay.addWidget(self.createActions(['Add']))
+        lay.addWidget(self.createActions(['Add', 'Update']))
         lay.addWidget(self.form)
         lay.addWidget(self.status, alignment=Qt.AlignBottom)
         wgt.setLayout(lay)
         self.actionsMap['Add'].pressed.connect(self.addAction)
+        self.actionsMap['Update'].pressed.connect(self.updateAction)
 
         self.setWidget(wgt)
 
@@ -154,51 +155,12 @@ class AsSquareWidget(QDockWidget):
         self.log.info('Initialized')
 
     def addAction(self):
-        fnew = self.form.getFeature(self.layersMgr.squares,
-                                    self.layersMgr.sources)
-        if not fnew or not fnew[0]:
-            self.log.info('Nothing to add')
-            return
-        self.layersMgr.addRecord(fnew[0], fnew[1])
+        itNew = self.form.mergeItem(self.layersMgr.selectedItem())
+        self.layersMgr.addItem(itNew)
 
-    def createActions(self, actions):
-        self.actionsMap = {}
-        actionsGroup = QDialogButtonBox(self)
-        for a in actions:
-            btn = actionsGroup.addButton(a,QDialogButtonBox.ActionRole)
-            self.actionsMap[a] = btn
-        return actionsGroup
-
-class AsquareWidget(QDockWidget):
-
-    def __init__(self, log, iface, parent=None):
-        QDockWidget.__init__(self, parent=parent)
-        self.log = log
-        self.iface = iface
-        wgt = QWidget()
-        lay = QVBoxLayout(self)
-        self.status = QStatusBar(self)
-        self.form = FeatureForm(self.log, self)
-        lay.addWidget(self.createActions(['Add']))
-        lay.addWidget(self.form)
-        lay.addWidget(self.status, alignment=Qt.AlignBottom)
-        wgt.setLayout(lay)
-        self.actionsMap['Add'].pressed.connect(self.addAction)
-        self.setWidget(wgt)
-
-        self.layersMgr = LayersManager(QgsProject.instance(),
-                                       self.log,
-                                       lambda x: QgsVectorLayer(x, providerLib='spatialite'))
-        self.layersMgr.handlers['grid_selected'] = self.form.setFeature
-        self.log.info('Initialized')
-                    
-    def addAction(self):
-        fnew = self.form.getFeature(self.layersMgr.squares,
-                                    self.layersMgr.sources)
-        if not fnew or not fnew[0]:
-            self.log.info('Nothing to add')
-            return
-        self.layersMgr.addRecord(fnew[0], fnew[1])
+    def updateAction(self):
+        itUpdt = self.form.mergeItem(self.layersMgr.selectedItem())
+        self.layersMgr.updateItem(itUpdt)
 
     def createActions(self, actions):
         self.actionsMap = {}

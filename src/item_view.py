@@ -21,7 +21,7 @@ class AttrEditor:
         self.seth(self.widget, v)
 
     def clear(self):
-        self.seth(self.wiget, None)
+        self.seth(self.widget, '')
 
 def textEditor(label):
     return AttrEditor(label, QLineEdit())
@@ -40,6 +40,10 @@ class ItemFormWidget(QWidget):
 
     def setItem(self, item):
         self.log.info('Set item {}', item)
+        for ed in self.input.values():
+            ed.clear()
+        if not item:
+            return
         for (edName, ed) in self.input.items():
             v = item.value(edName)
             if v:
@@ -47,5 +51,8 @@ class ItemFormWidget(QWidget):
 
     def mergeItem(self, item):
         for (edName, ed) in self.input.items():
-            item.setValue(edName, ed.value())
+            v = ed.value()
+            if v:
+                self.log.info('Merge {}:{}', edName,  v)
+                item.setValue(edName, ed.value())
         return item

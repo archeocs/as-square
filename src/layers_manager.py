@@ -24,6 +24,7 @@ class TxManager:
 
     def __init__(self):
         self.layers = []
+        self.item = None
 
     def begin(self):
         for e in self.layers:
@@ -71,6 +72,7 @@ class LayersManager:
             self.managed.add(VIEW_LAYER)
             self.txManager.layers.append(self.squares)
             self.txManager.layers.append(self.sources)
+            self.records.selectionChanged.connect(partial(self.gridSelected, layer=self.records))
             return True
         return False
 
@@ -84,15 +86,15 @@ class LayersManager:
         self.grid[name] = self.getLayer(name)
         if self.grid.get(name, None):
             self.managed.add(name)
-            self.grid[name].selectionChanged.connect(partial(self.gridSelected, layer=name))
+            self.grid[name].selectionChanged.connect(partial(self.gridSelected, layer=self.grid[name]))
             self.log.info('Source layer {} initialized', name)
             return True
         return False
 
     def toItem(self, feat):
-        self.log.info('{}', self.baseAttrs)
+        self.log.info('Id: {}', feat.id())
         names = feat.fields().names()
-        base = GeoItem(dict(self.baseAttrs), feat.geometry())
+        base = GeoItem(dict(self.baseAttrs), feat.geometry(), feat.id())
         for n in names:
             base.setValue(n, feat[n])
         self.log.info('Item {}', base.attrs)
@@ -101,9 +103,10 @@ class LayersManager:
     def gridSelected(self, selected, deselected, clear, layer):
         if len(selected) == 1:
             self.log.info('Selected')
-            feat = self.grid[layer].getFeature(selected[0])
+            feat = layer.getFeature(selected[0])
+            self.txManager.item = self.toItem(feat)
+            self.emit('item_selected', self.txManager.item)
             self.emit('grid_selected', feat)
-            self.emit('item_selected', self.toItem(feat))
         elif len(selected) > 1:
             self.log.info('Multiselect')
             self.emit('grid_selected', None)
@@ -152,6 +155,45 @@ class LayersManager:
         self.log.info('Layer {} not found', name)
         return None
 
+    def selectedItem(self):
+        if self.txManager.item:
+            item = self.txManager.item
+            return GeoItem(dict(item.attrs),
+                           item.geometry, item.ident)
+        return None
+
+    def updateFeature(self, feat, item):
+        for n in feat.fields().names():
+            self.log.info('{}: {}', n, item.value(n))
+            iv = item.value(n)
+            if iv:
+                feat[n] = iv
+        self.log.info('updateFeature {}', feat.id())
+        return feat
+
+    def updateFeatureAttrs(self, item, layer):
+        allFields = layer.fields()
+        for f in allFields:
+            fid = allFields.indexOf(f.name())
+            iv = item.value(f.name())
+            if iv:
+                layer.changeAttributeValue(item.ident, fid, iv)
+
+    def updateItem(self, item):
+        self.txManager.begin()
+        self.updateFeatureAttrs(item, self.squares)
+        self.updateFeatureAttrs(item, self.sources)
+        self.txManager.commit()
+        self.log.info('Item updated {}', item.ident)
+
+    def addItem(self, item):
+        sqFeat = self.updateFeature(QgsFeature(self.squares.fields()), item)
+        sqFeat.setGeometry(item.geometry)
+        srcFeat = self.updateFeature(QgsFeature(self.sources.fields()), item)
+        sqId = self.addRecord(sqFeat, srcFeat)
+        item.ident = sqId
+        self.txManager.item = item
+
     def addRecord(self, square, sourcesFeat):
         self.txManager.begin()
         squaresAdd = self.squares.dataProvider().addFeatures([square])
@@ -163,8 +205,10 @@ class LayersManager:
             self.log.info('Adding to {} Failed {}',
                           self.squares.dataProvider().uri().uri(),
                           square.geometry().asWkt())
+            return
         if sourcesFeat:
             sourcesFeat['square'] = squareId
+            sourcesFeat.setId(squareId)
             self.sources.addFeature(sourcesFeat)
         saved = self.txManager.commit()
         self.records.dataProvider().forceReload()

@@ -2,6 +2,7 @@ import unittest
 
 from qgis.core import *
 from layers_manager import LayersManager
+from items import GeoItem
 from main import StdOutLogAdapter
 
 class QgsProj:
@@ -27,6 +28,7 @@ class DataProvider:
     def __init__(self, db):
         self._db = db
         self.features = []
+        self.attrChanges = []
 
     def database(self):
         return self._db
@@ -38,7 +40,6 @@ class DataProvider:
         pass
     
     def addFeatures(self, f):
-        print(f)
         self.features.extend(f)
         f[0].setId(1234)
         return (True, f)
@@ -58,7 +59,9 @@ class Layer:
         self._dataProvider = DataProvider(db)
         self.selectionChanged = self
         self.handlers = {}
-        self._fields = fields
+        self._fields = QgsFields()
+        for f in fields:
+            self._fields.append(QgsField(f, typeName='int'))
 
     def getFeature(self, args):
         return args
@@ -94,10 +97,10 @@ class Layer:
         pass
 
     def fields(self):
-        return self
-
-    def names(self):
         return self._fields
+
+    def changeAttributeValue(self, featId, fieldId, value):
+        self._dataProvider.attrChanges.append((featId, fieldId, value))
 
 def defaultLayerFactory(name):
     return Layer(name=name)
@@ -144,7 +147,62 @@ class LayersManagerTest(unittest.TestCase):
         qgsProj.layers['grid_50_m'].handlers['selection_changed']([feat50],'b','c')
 
         self.assertEqual(feats, [feat10, feat50])
-    
+
+    def test_selected_feature_item_event_triggered(self):
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        items = []
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
+        man.handlers['item_selected'] = lambda x: items.append(x)
+
+        feat_item = self.feat_item()
+        qgsProj.layers['grid_50_m'].handlers['selection_changed']([feat_item[0]],'b','c')
+
+        self.assertEqual(items[0].ident, feat_item[1].ident)
+        self.assertDictEqual(items[0].attrs, feat_item[1].attrs)
+
+    def test_selected_record_item_event_triggered(self):
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        items = []
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
+        man.handlers['item_selected'] = lambda x: items.append(x)
+
+        feat_item = self.feat_item()
+        qgsProj.layers['as_records'].handlers['selection_changed']([feat_item[0]],'b','c')
+
+        self.assertEqual(items[0].ident, feat_item[1].ident)
+        self.assertDictEqual(items[0].attrs, feat_item[1].attrs)
+
+    def test_selected_feature_current_item(self):
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        items = []
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
+        man.handlers['item_selected'] = lambda x: items.append(x)
+
+        feat_item = self.feat_item()
+        qgsProj.layers['grid_50_m'].handlers['selection_changed']([feat_item[0]],'b','c')
+
+        self.assertEqual(man.selectedItem().ident, feat_item[1].ident)
+
+    def test_selected_record_current_item(self):
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        items = []
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
+        man.handlers['item_selected'] = lambda x: items.append(x)
+
+        feat_item = self.feat_item()
+        qgsProj.layers['as_records'].handlers['selection_changed']([feat_item[0]],'b','c')
+
+        self.assertEqual(man.selectedItem().ident, feat_item[1].ident)
+
+
     def test_init_layer_sources_loaded(self):
         src = []
         def layerFactory(s):
@@ -232,10 +290,47 @@ class LayersManagerTest(unittest.TestCase):
         self.assertEqual(len(man.squares.dataProvider().features), 1)
         self.assertEqual(man.sources.dataProvider().features[0]['square'], 1234)
 
-    def feat(self):
-        f = QgsField('square', typeName='int')
+    def test_add_item(self):
+        def layerFactory(s):
+            return Layer(name=s)
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'as_sources': Layer(name='as_sources', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
+
+        man.addItem(GeoItem({'square': 1111}, geom=QgsGeometry()))
+
+        self.assertEqual(len(man.sources.dataProvider().features), 1)
+        self.assertEqual(len(man.squares.dataProvider().features), 1)
+        self.assertEqual(man.sources.dataProvider().features[0]['square'], 1234)
+        self.assertEqual(man.squares.dataProvider().features[0]['square'], 1111)
+
+    def test_update_item(self):
+        def layerFactory(s):
+            return Layer(name=s)
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'as_sources': Layer(name='as_sources', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
+
+        man.updateItem(GeoItem({'square': 1111}, geom=QgsGeometry(), ident=4444))
+
+        self.assertIn((4444, 0, 1111), man.squares.dataProvider().attrChanges)
+
+    def feat(self, fields={'square': 5}):
+        #f = QgsField('square', typeName='int')
         ff = QgsFields()
-        ff.append(f)
+        for (k, v) in fields.items():
+            ff.append(QgsField(k, typeName=str(type(v))))
         qf = QgsFeature(ff)
+        for (k, v) in fields.items():
+            qf[k] = v
         qf.setId(12345)
         return qf
+
+    def feat_item(self, fields={'square': 5}):
+        f = self.feat(fields)
+        item = GeoItem(fields, f.geometry(), f.id())
+        return (f, item)

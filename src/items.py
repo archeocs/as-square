@@ -42,20 +42,25 @@ class ItemAttr:
         self.value = value
         self.readOnly = readOnly
 
+EXCLUDE_NAMES = ['id']
+
 class GeoItem:
 
-    def __init__(self, attrs, geom):
+    def __init__(self, attrs, geom, ident=None):
         self.attrs = attrs
         self.geometry = geom
+        self.ident = ident
 
     def value(self, name):
-        if name in self.attrs:
-            return self.attrs[name]
+        ln = name.lower()
+        if ln in self.attrs and ln not in EXCLUDE_NAMES:
+            return self.attrs[ln]
         return None
 
     def setValue(self, name, v):
-        if name in self.attrs:
-            self.attrs[name] = v
+        ln = name.lower()
+        if ln in self.attrs and ln not in EXCLUDE_NAMES:
+            self.attrs[ln] = v
 
 
 class Item:

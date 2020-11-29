@@ -56,7 +56,19 @@ SELECT S.ID AS FEATURE_ID,
        X.CULTURE,
        X.AUTHOR,
        X.S_REMARKS AS 'SOURCES REMARKS',
-       S.GEOMETRY
+       S.GEOMETRY,
+       S.SQUARE_ID,
+       S.SQUARE_DIMENSION,
+       S.AZP,
+       S.SURVEY_DATE,
+       S.PEOPLE,
+       S.PLOW_DEPTH,
+       S.AGRO_TREATMENTS,
+       S.WEATHER,
+       S.TEMPERATURE,
+       S.OBSERVATION,
+       S.REMARKS,
+       X.S_REMARKS
 FROM AS_SQUARES S LEFT JOIN AS_SOURCES X ON S.ID = X.SQUARE;
 
 INSERT INTO VIEWS_GEOMETRY_COLUMNS VALUES ('as_records', 'geometry', 'feature_id', 'as_squares', 'geometry', 1);
