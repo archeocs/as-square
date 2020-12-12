@@ -5,23 +5,39 @@ from layers_manager import LayersManager
 from items import GeoItem
 from main import StdOutLogAdapter
 
+class TestSignal:
+
+    def __init__(self):
+        self.handlers = []
+
+    def connect(self, fun):
+        self.handlers.append(fun)
+
+    def emit(self, *args):
+        for f in self.handlers:
+            f(*args)
+
+    def __getitem__(self, n):
+        return self
+
 class QgsProj:
 
     def __init__(self, layers):
         self.layers = layers
-        self._handlers = {'layers_added': []}
-        self.layersAdded = self
+        self.layersAdded = TestSignal()
+        self.layerRemoved = TestSignal()
+        self.layerWillBeRemoved = TestSignal()
 
-    def connect(self, fun):
-        self._handlers['layers_added'].append(fun)
-    
     def mapLayers(self):
         return self.layers
 
     def testAddLayer(self, name, lay):
         self.layers[name] = lay
-        for f in self._handlers['layers_added']:
-            f([lay])
+        self.layersAdded.emit([lay])
+
+    def testRemoveLayer(self, name):
+        del self.layers[name]
+        self.layerWillBeRemoved.emit(Layer(name=name))
 
 class DataProvider:
 
@@ -277,6 +293,35 @@ class LayersManagerTest(unittest.TestCase):
         qgsProj.testAddLayer('as_records', Layer())
         self.assertTrue(isinstance(man.sources, QgsVectorLayer))
         self.assertEqual(src[0], RECORDS_URI.replace('RECORDS','SQUARES'))
+
+    def test_records_removed_manager_reset(self):
+        qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_50_m': Layer(name='grid_50_m')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
+
+        self.assertTrue(man.isReady())
+
+        qgsProj.testRemoveLayer('as_records')
+
+        self.assertIsNone(man.sources)
+        self.assertIsNone(man.squares)
+
+    def test_records_removed_event_emited(self):
+        qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_50_m': Layer(name='grid_50_m')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
+
+        self.assertTrue(man.isReady())
+
+        emited = False
+        def eh():
+            print('emited')
+            nonlocal emited
+            emited = True
+
+        man.handlers['records_removed'] = eh 
+
+        qgsProj.testRemoveLayer('as_records')
+
+        self.assertTrue(emited)
 
     def test_add_record(self):
         def layerFactory(s):

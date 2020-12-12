@@ -17,91 +17,7 @@ class StdOutLogAdapter(LogAdapter):
         if args == ():
             print(message)
         else:
-            print(message.format(*args))
-
-
-class FeatureForm(QWidget):
-
-    def __init__(self, log, parent=None):
-        QWidget.__init__(self, parent)
-        self.log = log
-        self.lay = QFormLayout()
-        self.setLayout(self.lay)
-        self.input = {}
-        self.feat = None
-        self.addText('square_id', 'Square')
-        self.addText('survey_date', 'Date')
-        self.addText('azp', 'AZP number')
-        self.addText('people', 'People')
-        self.lay.addRow(QRubberBand(QRubberBand.Line, self))
-        self.addText('pottery', 'Pottery')
-        self.addText('glass', 'Glass')
-        self.addText('bones', 'Bones')
-        self.addText('metal', 'Metal')
-        self.addText('flint', 'Flint')
-        self.addText('clay', 'Clay')
-        self.addText('other', 'Other')
-        self.addText('chronology', 'Chronology')
-        self.addText('culture', 'Culture')
-        self.addText('author', 'Author')
-        self.addText('s_remarks', 'Source remarks')
-        self.lay.addRow(QRubberBand(QRubberBand.Line, self))
-        self.addText('observation', 'Observation')
-        self.addText('temperature', 'Temperature')
-        self.addText('weather', 'Weather')
-        self.addText('plow_depth', 'Plow Depth')
-        self.addText('agro_treatements', 'Agricultural Treatments')
-        self.addText('remarks', 'Remarks')
-
-    def setFeature(self, feat):
-        for f in self.input.values():
-            f.clear()
-        self.feat = feat
-        if feat:
-            names = feat.fields().names()
-            for attr in names:
-                if attr in self.input:
-                    fv = feat[attr]
-                    if isinstance(fv, str):
-                        self.input[attr].setText(fv)
-
-    def clear(self):
-        self.feat = None
-        self.setFeature(None)
-
-    def addText(self, key, label):
-        txt = QLineEdit()
-        self.lay.addRow(label, txt)
-        self.input[key] = txt
-        return txt
-
-    def featureFromFields(self, layer):
-        allFields = layer.fields()
-        f = QgsFeature(allFields)
-        fc = 0
-        for a in allFields.names():
-            if a.lower() in self.input:
-                ta = self.input[a.lower()].text().strip()
-                if ta:
-                    self.log.info(str(a) + ' = ' + str(ta))
-                    f[a] = ta
-                    fc += 1
-        if fc > 0:
-            return f
-        return None
-    
-    def getFeature(self, squares, artifacts):
-        if not self.feat:
-            return None
-        square = self.featureFromFields(squares)
-        art = self.featureFromFields(artifacts)
-        if square:
-            square['square_dimension'] = self.feat['square_dimension']
-            square.setGeometry(self.feat.geometry())
-            self.log.info('Set geometry {}',
-                          square.geometry().asWkt())
-        return [square, art]
-        
+            print(message.format(*args))        
 
 def formWidget(log, parent):
     form = ItemFormWidget(log, parent)
@@ -152,11 +68,22 @@ class AsSquareWidget(QDockWidget):
                                        self.log,
                                        lambda x: QgsVectorLayer(x, providerLib='spatialite'))
         self.layersMgr.handlers['item_selected'] = self.form.setItem
+        self.layersMgr.handlers['records_removed'] = self.recordsRemoved
         self.log.info('Initialized')
+
+    def recordsRemoved(self):
+        self.iface.messageBar().pushMessage('Removed layer AS_RECORD. Please add layer to project',
+                                            Qgis.Warning)
+        self.form.setItem(None)
 
     def addAction(self):
         itNew = self.form.mergeItem(self.layersMgr.selectedItem())
-        self.layersMgr.addItem(itNew)
+        if self.layersMgr.isReady():
+            self.layersMgr.addItem(itNew)
+        else:
+            self.iface.messageBar().pushMessage('''Can't add new record.
+            Check if layer AS_RECORDS is added to project and try again''',
+                                            Qgis.Warning)
 
     def updateAction(self):
         itUpdt = self.form.mergeItem(self.layersMgr.selectedItem())

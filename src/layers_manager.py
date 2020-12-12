@@ -48,6 +48,8 @@ class LayersManager:
         self.layFactory = layFactory
         self.txManager = TxManager()
         self.baseAttrs = {}
+        self.sources = None
+        self.squares = None
         ###################
         self.initRecordsLayer()
         self.initGridLayer()
@@ -57,12 +59,32 @@ class LayersManager:
             self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_LAYER, initFunc=self.initEventsGrid50m))
         if not self.initEventsGrid10m():
             self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_10M_LAYER, initFunc=self.initEventsGrid10m))
-        
+
     def initRecordsLayer(self):
         if not self.initDataLayers():
             self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=VIEW_LAYER, initFunc=self.initDataLayers))
+        self.qgsProj.layerWillBeRemoved[QgsMapLayer].connect(
+            partial(self.onLayerUnloaded,
+                    name=VIEW_LAYER,
+                    oper=self.removedViewLayer
+                    )
+        )
 
-    def initDataLayers(self):        
+    def removedViewLayer(self, lay):
+        self.log.info('Event: layer removed {}', lay.name())
+        if self.records:
+            self.squares = None
+            self.sources = None
+            self.records = None
+            self.managed.remove(lay.name().upper())
+            self.txManager.layers.clear()
+            self.emit('records_removed')
+
+    def isReady(self):
+        return self.records and self.squares and self.sources
+
+    def initDataLayers(self):
+        self.log.info('Init data layers')
         self.records = self.getLayer(VIEW_LAYER)
         if self.records:
             self.squares = self.getOrLoad(SQUARES_LAYER, self.records, 'geometry')
@@ -115,17 +137,44 @@ class LayersManager:
             self.emit('grid_selected', None)
             self.emit('item_selected', None)
 
-    def emit(self, event, data):
+    def emit(self, event, data=None):
         if event in self.handlers:
-            self.handlers[event](data)
-            
+            if data:
+                self.handlers[event](data)
+            else:
+                self.handlers[event]()
+
     def onLayerLoaded(self, layers, name, initFunc):
+        """
+        When layer with name matching argument 'name' is added
+        then 'initFunc' is initialized.
+
+        This method is supposed to be partialy initialized and
+        attached to signal QgsProject.layersAdded.
+
+        For example
+        QgsProject.layerAdded.connect(partial(onLayerLoaded, name='layer-name', initFunc=lambda x: pass))
+
+        First argument represents list of added layers
+        and is received from signal
+        """
+        self.log.info('onLayerLoaded: {} {}', list(map(lambda x: x.name(), layers)), name)
         if name in self.managed:
+            self.log.info('{} already managed {}', name, self.managed)
             return
         matching = filter(lambda v: equalIgnoreCase(v.name(), name) and isVector(v), layers)
         if len(list(matching)) > 0 and initFunc:
             self.log.info('Layer {} is loaded. Initialization started', name)
             initFunc()
+
+    def onLayerUnloaded(self, layer, name, oper):
+        self.log.info('Unload vent {} {}', layer.name(), name);
+        if name.upper() not in self.managed:
+            return
+        elif layer.name().upper() != name.upper():
+            return
+        else:
+            oper(layer)
 
     def addLayerAttrs(self, layer):
         for f in layer.fields().names():
@@ -163,6 +212,9 @@ class LayersManager:
         return None
 
     def updateFeature(self, feat, item):
+        """
+        Merges feature with item values
+        """
         for n in feat.fields().names():
             self.log.info('{}: {}', n, item.value(n))
             iv = item.value(n)
@@ -171,7 +223,11 @@ class LayersManager:
         self.log.info('updateFeature {}', feat.id())
         return feat
 
+
     def updateFeatureAttrs(self, item, layer):
+        """
+        Saves changed values in layer storage
+        """
         allFields = layer.fields()
         for f in allFields:
             fid = allFields.indexOf(f.name())
@@ -180,6 +236,9 @@ class LayersManager:
                 layer.changeAttributeValue(item.ident, fid, iv)
 
     def updateItem(self, item):
+        """
+        Saves item in layer storage
+        """
         self.txManager.begin()
         self.updateFeatureAttrs(item, self.squares)
         self.updateFeatureAttrs(item, self.sources)
