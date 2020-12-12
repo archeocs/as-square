@@ -55,14 +55,14 @@ class LayersManager:
         self.initGridLayer()
 
     def initGridLayer(self):
-        if not self.initEventsGrid50m():
-            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_LAYER, initFunc=self.initEventsGrid50m))
-        if not self.initEventsGrid10m():
-            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_10M_LAYER, initFunc=self.initEventsGrid10m))
+        self.initEventsGrid50m()
+        self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_LAYER, initFunc=self.initEventsGrid50m))
+        self.initEventsGrid10m()
+        self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=GRID_10M_LAYER, initFunc=self.initEventsGrid10m))
 
     def initRecordsLayer(self):
-        if not self.initDataLayers():
-            self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=VIEW_LAYER, initFunc=self.initDataLayers))
+        self.initDataLayers()
+        self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=VIEW_LAYER, initFunc=self.initDataLayers))
         self.qgsProj.layerWillBeRemoved[QgsMapLayer].connect(
             partial(self.onLayerUnloaded,
                     name=VIEW_LAYER,

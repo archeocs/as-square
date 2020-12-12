@@ -253,6 +253,17 @@ class LayersManagerTest(unittest.TestCase):
         
         self.assertEqual(man.managed, {'AS_RECORDS', 'GRID_50_M'})
 
+    def test_records_removed_and_added_again(self):
+        qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_50_m': Layer(name='grid_50_m')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
+        self.assertTrue(man.isReady())
+
+        qgsProj.testRemoveLayer('as_records')
+        self.assertFalse(man.isReady())
+
+        qgsProj.testAddLayer('as_records', Layer())
+        self.assertTrue(man.isReady())
+
     def test_grid_added_layer_loaded(self):
         qgsProj = QgsProj(layers={'as_records': Layer()})
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
