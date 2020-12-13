@@ -23,6 +23,28 @@ class AttrEditor:
     def clear(self):
         self.seth(self.widget, '')
 
+def comboBox(items):
+    cb = QComboBox()
+    cb.addItem('Undefined', '')
+    for it in items:
+        cb.addItem(it.displayText, userData=it.key)
+    return cb
+
+def setCurrentKey(combo, key):
+    keyIndex = combo.findData(key)
+    if keyIndex < 0:
+        combo.setCurrentIndex(0)
+    combo.setCurrentIndex(keyIndex)
+
+def getCurrentKey(combo):
+    return combo.currentData()
+
+def listEditor(label, items):
+    cb = comboBox(items)
+    return AttrEditor(label, cb,
+                      setHandler=setCurrentKey,
+                      getHandler=getCurrentKey)
+
 def textEditor(label):
     return AttrEditor(label, QLineEdit())
 
@@ -35,6 +57,11 @@ class ItemFormWidget(QWidget):
 
     def addText(self, name, label):
         ed = textEditor(label)
+        self.input[name] = ed
+        self.lay.addRow(ed.label, ed.widget)
+
+    def addList(self, name, label, items):
+        ed = listEditor(label, items)
         self.input[name] = ed
         self.lay.addRow(ed.label, ed.widget)
 

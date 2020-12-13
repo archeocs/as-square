@@ -2,7 +2,10 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from qgis.core import *
+
 from functools import partial
+from collections import namedtuple
+
 from layers_manager import LayersManager
 from item_view import ItemFormWidget
 
@@ -19,6 +22,8 @@ class StdOutLogAdapter(LogAdapter):
         else:
             print(message.format(*args))        
 
+ListItem = namedtuple('ListItem', ['displayText', 'key'])
+
 def formWidget(log, parent):
     form = ItemFormWidget(log, parent)
     form.addText('square_id', 'Square')
@@ -33,7 +38,11 @@ def formWidget(log, parent):
     form.addText('flint', 'Flint')
     form.addText('clay', 'Clay')
     form.addText('other', 'Other')
-    form.addText('chronology', 'Chronology')
+    form.addList('chronology', 'Chronology', [
+        ListItem('Paleolit', 'P'),
+        ListItem('Mezolit', 'M'),
+        ListItem('Neolit', 'N')
+    ])
     form.addText('culture', 'Culture')
     form.addText('author', 'Author')
     form.addText('s_remarks', 'Source remarks')
