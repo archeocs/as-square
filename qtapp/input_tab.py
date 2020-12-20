@@ -7,7 +7,14 @@ from PyQt5.QtWidgets import *
 class InputTabWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
-        self.setCentralWidget(QTableWidget(5, 5))
+        self.setCentralWidget(self.createView())
+
+    def createView(self):
+        tab = QTableView(self)
+        model = QStandardItemModel(10, 10)
+        tab.setModel(model)
+        return tab
+
 
 def main():
     app = QApplication(argv)
