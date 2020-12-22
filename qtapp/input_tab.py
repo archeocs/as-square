@@ -38,6 +38,9 @@ class Column:
 
 class InputTabWidget(QWidget):
 
+    accepted = pyqtSignal()
+    canceled = pyqtSignal()
+
     def __init__(self, modelDef, rows, parent=None):
         QWidget.__init__(self, parent)
         lay = QVBoxLayout()
@@ -93,7 +96,11 @@ class InputTabWidget(QWidget):
         delBtn.clicked.connect(self.delRowAction)
 
         okBtn = QPushButton('OK')
+        okBtn.clicked.connect(self.accepted.emit)
+
         cancelBtn = QPushButton('Cancel')
+        cancelBtn.clicked.connect(self.canceled.emit)
+
 
         lay.addWidget(addBtn)
         lay.addWidget(delBtn)
@@ -102,20 +109,70 @@ class InputTabWidget(QWidget):
 
         return buttons
 
+    def getRows(self):
+        allRows = []
+        for rc in range(self.model.rowCount()):
+            row = []
+            for (ci, md) in enumerate(self.modelDef):
+                sit = self.model.item(rc, ci)
+                row.append(md.getValue(sit))
+            allRows.append(row)
+        return allRows
+
+class InputTabDialog(QDialog):
+
+    def __init__(self, modelDef, rows, parent):
+        QDialog.__init__(self, parent)
+        lay = QVBoxLayout()
+        self.setLayout(lay)
+        self.widget = InputTabWidget(modelDef, rows, self)
+        lay.addWidget(self.widget)
+        self.widget.accepted.connect(self.accept)
+        self.widget.canceled.connect(self.reject)
+        self.setModal(True)
+
+    def getRows(self):
+        return self.widget.getRows()
+
+
 
 class InputTabWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
         columns = [
-            Column({'a': 'A', 'b': 'B', '?': ''})
+            Column({'a': 'A', 'b': 'B', '?': ''}, empty='?')
             ,Column()
             ,Column()
-            ,Column({'x': 'X', 'y': 'YYYYYY', '?': ''})
+            ,Column({'x': 'X', 'y': 'YYYYYY', '?': ''}, empty='?')
         ]
         rows = [
             ['a', '1111', '5555', 'y']
         ]
         self.setCentralWidget(InputTabWidget(columns, rows, self))
+
+class StartWindow(QMainWindow):
+
+    def __init__(self):
+        QMainWindow.__init__(self)
+        btn = QPushButton('OPEN')
+        btn.clicked.connect(self.start)
+        self.setCentralWidget(btn)
+
+    def start(self):
+        columns = [
+            Column({'a': 'A', 'b': 'B', '?': ''}, empty='?')
+            ,Column()
+            ,Column()
+            ,Column({'x': 'X', 'y': 'YYYYYY', '?': ''}, empty='?')
+        ]
+        rows = [
+            ['a', '1111', '5555', 'y']
+        ]
+        itd = InputTabDialog(columns, rows, self)
+        v = itd.exec_()
+        print(v)
+        if v == 1:
+            print(itd.getRows())
 
 def newItem(value):
     print(value)
@@ -181,7 +238,7 @@ class TypedItem(QStandardItem):
 
 def main():
     app = QApplication(argv)
-    win = InputTabWindow()
+    win = StartWindow()
     win.show()
     app.exec_()
 
