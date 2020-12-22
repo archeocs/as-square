@@ -16,10 +16,11 @@ class Cell:
 
 class Column:
 
-    def __init__(self, allowedValues=None, empty=''):
+    def __init__(self, allowedValues=None, empty='', hidden=False):
         self.allowed = allowedValues
         self.combo = allowedValues is not None
         self.empty = empty
+        self.hidden = hidden
 
     def modelItem(self, val):
         if self.combo and val in self.allowed:
@@ -29,6 +30,7 @@ class Column:
 
     def getValue(self, item):
         if self.combo:
+            print('get combo', item)
             return item.data(role=Qt.EditRole)
         else:
             return item.data(role=Qt.DisplayRole)
@@ -54,7 +56,8 @@ class InputTabWidget(QWidget):
             if c.combo:
                 delegate = mapComboBoxDelegate(c.allowed, self.tab)
                 self.tab.setItemDelegateForColumn(ci, delegate)
-
+            if c.hidden:
+                self.tab.hideColumn(ci)
         self.modelDef = modelDef
 
         lay.addWidget(self.tab)
@@ -159,14 +162,15 @@ class StartWindow(QMainWindow):
         self.setCentralWidget(btn)
 
     def start(self):
-        columns = [
+        columns = [ 
             Column({'a': 'A', 'b': 'B', '?': ''}, empty='?')
             ,Column()
             ,Column()
             ,Column({'x': 'X', 'y': 'YYYYYY', '?': ''}, empty='?')
+            ,Column(empty=None, hidden=True)
         ]
         rows = [
-            ['a', '1111', '5555', 'y']
+            ['a', '1111', '5555', 'y', 1]
         ]
         itd = InputTabDialog(columns, rows, self)
         v = itd.exec_()
