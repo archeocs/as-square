@@ -16,9 +16,10 @@ class Cell:
 
 class Column:
 
-    def __init__(self, allowedValues=None):
+    def __init__(self, allowedValues=None, empty=''):
         self.allowed = allowedValues
         self.combo = allowedValues is not None
+        self.empty = empty
 
     def modelItem(self, val):
         if self.combo and val in self.allowed:
@@ -31,6 +32,9 @@ class Column:
             return item.data(role=Qt.EditRole)
         else:
             return item.data(role=Qt.DisplayRole)
+
+    def getEmpty(self):
+        return self.modelItem(self.empty)
 
 class InputTabWidget(QWidget):
 
@@ -47,6 +51,9 @@ class InputTabWidget(QWidget):
             if c.combo:
                 print(ci, c.allowed)
                 self.tab.setItemDelegateForColumn(ci, mapComboBoxDelegate(c.allowed, self.tab))
+
+        self.modelDef = modelDef
+
         lay.addWidget(self.tab)
         lay.addWidget(self.createButtons())
 
@@ -56,16 +63,18 @@ class InputTabWidget(QWidget):
         return tab
 
     def initModel(self, modelDef, rows):
+
         model = QStandardItemModel(0, len(modelDef))
-        for (ri, r) in enumerate(rows):
-            md = modelDef[ri]
-            mrow = list(map(md.modelItem, r))
-            print(mrow)
+        for r in rows:
+            #mrow = list(map(md.modelItem, r))
+            mrow = []
+            for (ci, c) in enumerate(r):
+                mrow.append(modelDef[ci].modelItem(c))
             model.appendRow(mrow)
         return model
 
     def addRowAction(self):
-        self.model.appendRow([newItem(Cell('', '?')), newItem(Cell(''))])
+        self.model.appendRow([md.getEmpty() for md in self.modelDef])
 
     def delRowAction(self):
         selModel = self.tab.selectionModel()
