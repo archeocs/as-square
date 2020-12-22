@@ -49,8 +49,8 @@ class InputTabWidget(QWidget):
 
         for (ci, c) in enumerate(modelDef):
             if c.combo:
-                print(ci, c.allowed)
-                self.tab.setItemDelegateForColumn(ci, mapComboBoxDelegate(c.allowed, self.tab))
+                delegate = mapComboBoxDelegate(c.allowed, self.tab)
+                self.tab.setItemDelegateForColumn(ci, delegate)
 
         self.modelDef = modelDef
 
@@ -66,15 +66,14 @@ class InputTabWidget(QWidget):
 
         model = QStandardItemModel(0, len(modelDef))
         for r in rows:
-            #mrow = list(map(md.modelItem, r))
-            mrow = []
-            for (ci, c) in enumerate(r):
-                mrow.append(modelDef[ci].modelItem(c))
+            mrow = [modelDef[ci].modelItem(c)
+                    for (ci, c) in enumerate(r)]
             model.appendRow(mrow)
         return model
 
     def addRowAction(self):
-        self.model.appendRow([md.getEmpty() for md in self.modelDef])
+        self.model.appendRow([md.getEmpty()
+                              for md in self.modelDef])
 
     def delRowAction(self):
         selModel = self.tab.selectionModel()
@@ -114,7 +113,7 @@ class InputTabWindow(QMainWindow):
             ,Column({'x': 'X', 'y': 'YYYYYY', '?': ''})
         ]
         rows = [
-            ['a', '1111', '5555', '?']
+            ['a', '1111', '5555', 'y']
         ]
         self.setCentralWidget(InputTabWidget(columns, rows, self))
 
@@ -152,7 +151,8 @@ class MapComboBoxDelegate(QStyledItemDelegate):
     def setModelData(self, ed, model, index):
         v = ed.key()
         model.setData(index, v, role=Qt.EditRole)
-        model.setData(index, ed.itemData(ed.currentIndex(), Qt.DisplayRole), role=Qt.DisplayRole)
+        display = ed.itemData(ed.currentIndex(), Qt.DisplayRole)
+        model.setData(index, display, role=Qt.DisplayRole)
 
 class MapComboBox(QComboBox):
 
