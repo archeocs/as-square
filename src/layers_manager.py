@@ -9,6 +9,12 @@ VIEW_LAYER = 'AS_RECORDS'
 GRID_LAYER = 'GRID_50_M'
 GRID_10M_LAYER = 'GRID_10_M'
 
+RECORD_ATTRS = ['square_id', 'survey_date', 'azp', 'people', 'pottery',
+                'bones', 'glass', 'metal', 'flint', 'clay', 'other',
+                'author', 'sources', 's_remarks', 'observation', 'temperatur', 'weather',
+                'plow_depth', 'agro_treatments', 'remarks']
+SOURCE_ATTRS = ['chronology', 'culture']
+
 def isVector(lay):
     return lay.type() == QgsMapLayer.VectorLayer
 
@@ -91,12 +97,17 @@ class LayersManager:
             self.sources = self.getOrLoad(SOURCES_LAYER, self.records)
             self.addLayerAttrs(self.squares)
             self.addLayerAttrs(self.sources)
+            self.recordAttrs = self.initAttrs(RECORD_ATTRS)
+            self.sourceAttrs = self.initAttrs(SOURCE_ATTRS)
             self.managed.add(VIEW_LAYER)
             self.txManager.layers.append(self.squares)
             self.txManager.layers.append(self.sources)
-            self.records.selectionChanged.connect(partial(self.gridSelected, layer=self.records))
+            self.records.selectionChanged.connect(partial(self.gridSelected, layer=self.records, sources=True))
             return True
         return False
+
+    def initAttrs(self, attrs):
+        return dict([(atr, None) for atr in attrs])
 
     def initEventsGrid50m(self):
         return self.initGridEvents(GRID_LAYER)
@@ -113,20 +124,38 @@ class LayersManager:
             return True
         return False
 
-    def toItem(self, feat):
+    def toItem2(self, feat, sources):
         self.log.info('Id: {}', feat.id())
+        base = GeoItem(dict(self.recordAttrs), feat.geometry(), feat.id())
         names = feat.fields().names()
-        base = GeoItem(dict(self.baseAttrs), feat.geometry(), feat.id())
         for n in names:
             base.setValue(n, feat[n])
-        self.log.info('Item {}', base.attrs)
+        if sources:
+            base.setValue('sources', self.sourceItems(feat.id()))
+        else:
+            base.setValue('sources', [])
+        self.log.info('{}, Sources: {}', sources, base.value('sources'))
         return base
 
-    def gridSelected(self, selected, deselected, clear, layer):
+    def sourceItems(self, featId):
+        self.log.info('Init source items {}', featId)
+        iter = self.sources.getFeatures('square = ' + str(featId))
+        items = []
+        for f in iter:
+            git = dict(self.sourceAttrs)
+            git['id'] = None
+            names = f.fields().names()
+            for n in names:
+                git[n.lower()] = f[n]
+            items.append(git)
+        return items
+
+    def gridSelected(self, selected, deselected, clear, layer, sources=False):
         if len(selected) == 1:
             self.log.info('Selected')
             feat = layer.getFeature(selected[0])
-            self.txManager.item = self.toItem(feat)
+            self.txManager.item = self.toItem2(feat, sources)
+            self.log.info('{}', self.txManager.item.attrs)
             self.emit('item_selected', self.txManager.item)
             self.emit('grid_selected', feat)
         elif len(selected) > 1:
@@ -224,6 +253,15 @@ class LayersManager:
         return feat
 
 
+    def updateSourceFeat(self, feat, srcData):
+        for n in feat.fields().names():
+            iv = srcData.get(n.lower())
+            self.log.info('Source attr {}: {}', n, iv)
+            if iv:
+                feat[n] = iv
+        self.log.info('updateSourceFeature {}', feat.id())
+        return feat
+
     def updateFeatureAttrs(self, item, layer):
         """
         Saves changed values in layer storage
@@ -241,19 +279,47 @@ class LayersManager:
         """
         self.txManager.begin()
         self.updateFeatureAttrs(item, self.squares)
-        self.updateFeatureAttrs(item, self.sources)
+        self.updateSourceAttrs(item.value('sources'),
+                               item.ident)
         self.txManager.commit()
         self.log.info('Item updated {}', item.ident)
 
+    def updateSourceAttrs(self, rows, squareId):
+        allFields = self.sources.fields()
+        for r in rows:
+            ident = r.get('id')
+            if ident:
+                self.log.info('Update sources row {} {}', ident, r)
+                for f in allFields:
+                    fid = allFields.indexOf(f.name())
+                    iv = r.get(f.name().lower())
+                    if iv:
+                        self.sources.changeAttributeValue(ident, fid, iv)
+            else:
+                self.log.info('Add row to sources {} {}', squareId, r)
+                feat = self.updateSourceFeat(QgsFeature(allFields), r)
+                feat['square'] = squareId
+                self.sources.addFeature(feat)
+                
     def addItem(self, item):
         sqFeat = self.updateFeature(QgsFeature(self.squares.fields()), item)
         sqFeat.setGeometry(item.geometry)
-        srcFeat = self.updateFeature(QgsFeature(self.sources.fields()), item)
-        sqId = self.addRecord(sqFeat, srcFeat)
+        srcFeats = []
+        for isr in item.value('sources'):
+            sf = self.updateSourceFeat(
+                QgsFeature(self.sources.fields()),
+                isr)
+            srcFeats.append(sf)
+        sqId = self.addRecord(sqFeat, srcFeats)
         item.ident = sqId
         self.txManager.item = item
 
-    def addRecord(self, square, sourcesFeat):
+    def addRecord(self, square, sourcesFeat=[]):
+        """
+        Add feature 'square' to AS_SQUARES and feature
+        'sourcesFeat' to AS_SOURCES. Both features must have
+        all required fields initialized.
+        """
         self.txManager.begin()
         squaresAdd = self.squares.dataProvider().addFeatures([square])
         squareId = None
@@ -265,10 +331,10 @@ class LayersManager:
                           self.squares.dataProvider().uri().uri(),
                           square.geometry().asWkt())
             return
-        if sourcesFeat:
-            sourcesFeat['square'] = squareId
-            sourcesFeat.setId(squareId)
-            self.sources.addFeature(sourcesFeat)
+        for sf in  sourcesFeat:
+            sf['square'] = squareId
+            sf.setId(squareId)
+            self.sources.addFeature(sf)
         saved = self.txManager.commit()
         self.records.dataProvider().forceReload()
         count = self.records.featureCount()

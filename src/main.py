@@ -33,8 +33,7 @@ def formWidget(log, parent):
     form.addText('flint', 'Flint')
     form.addText('clay', 'Clay')
     form.addText('other', 'Other')
-    form.addText('chronology', 'Chronology')
-    form.addText('culture', 'Culture')
+    form.addItemEditor('sources', 'Classification')
     form.addText('author', 'Author')
     form.addText('s_remarks', 'Source remarks')
 

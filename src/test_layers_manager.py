@@ -1,7 +1,7 @@
 import unittest
 
 from qgis.core import *
-from layers_manager import LayersManager
+from layers_manager import *
 from items import GeoItem
 from main import StdOutLogAdapter
 
@@ -78,6 +78,9 @@ class Layer:
         self._fields = QgsFields()
         for f in fields:
             self._fields.append(QgsField(f, typeName='int'))
+
+    def getFeatures(self, expr):
+        return []
 
     def getFeature(self, args):
         return args
@@ -172,7 +175,9 @@ class LayersManagerTest(unittest.TestCase):
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
         man.handlers['item_selected'] = lambda x: items.append(x)
 
-        feat_item = self.feat_item()
+        expected_fields = dict([(f, '') for f in RECORD_ATTRS])
+        feat_item = self.feat_item(fields=expected_fields)
+
         qgsProj.layers['grid_50_m'].handlers['selection_changed']([feat_item[0]],'b','c')
 
         self.assertEqual(items[0].ident, feat_item[1].ident)
@@ -185,8 +190,9 @@ class LayersManagerTest(unittest.TestCase):
         items = []
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
         man.handlers['item_selected'] = lambda x: items.append(x)
+        expected_fields = dict([(f, '') for f in RECORD_ATTRS])
+        feat_item = self.feat_item(fields=expected_fields)
 
-        feat_item = self.feat_item()
         qgsProj.layers['as_records'].handlers['selection_changed']([feat_item[0]],'b','c')
 
         self.assertEqual(items[0].ident, feat_item[1].ident)
@@ -340,7 +346,7 @@ class LayersManagerTest(unittest.TestCase):
         qgsProj = QgsProj(layers={'as_records': Layer(), 'grid_50_m': Layer(name='grid_50_m')})
         man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
 
-        man.addRecord(self.feat(), self.feat())
+        man.addRecord(self.feat(), [self.feat()])
 
         self.assertEqual(len(man.sources.dataProvider().features), 1)
         self.assertEqual(len(man.squares.dataProvider().features), 1)
@@ -355,7 +361,7 @@ class LayersManagerTest(unittest.TestCase):
                                   'grid_50_m': Layer(name='grid_50_m')})
         man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
 
-        man.addItem(GeoItem({'square': 1111}, geom=QgsGeometry()))
+        man.addItem(GeoItem({'square': 1111, 'sources': [{'culture': 'XXX'}]}, geom=QgsGeometry()))
 
         self.assertEqual(len(man.sources.dataProvider().features), 1)
         self.assertEqual(len(man.squares.dataProvider().features), 1)
@@ -371,7 +377,7 @@ class LayersManagerTest(unittest.TestCase):
                                   'grid_50_m': Layer(name='grid_50_m')})
         man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
 
-        man.updateItem(GeoItem({'square': 1111}, geom=QgsGeometry(), ident=4444))
+        man.updateItem(GeoItem({'square': 1111, 'sources': []}, geom=QgsGeometry(), ident=4444))
 
         self.assertIn((4444, 0, 1111), man.squares.dataProvider().attrChanges)
 
@@ -386,7 +392,8 @@ class LayersManagerTest(unittest.TestCase):
         qf.setId(12345)
         return qf
 
-    def feat_item(self, fields={'square': 5}):
+    def feat_item(self, fields={'square': 5}, sources=[]):
         f = self.feat(fields)
         item = GeoItem(fields, f.geometry(), f.id())
+        item.setValue('sources', sources)
         return (f, item)

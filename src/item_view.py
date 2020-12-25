@@ -3,6 +3,9 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 from object_dict import ObjectDict as od
+from input_tab2 import *
+
+SRC_ATTRS = ['chronology', 'culture', 'id']
 
 class AttrEditor:
 
@@ -23,8 +26,59 @@ class AttrEditor:
     def clear(self):
         self.seth(self.widget, '')
 
+class ItemEditorWidget(QWidget):
+
+    def __init__(self, log, parent=None):
+        QWidget.__init__(self, parent)
+        lay = QVBoxLayout()
+        self.setLayout(lay)
+        btn = QPushButton('Open editor')
+        lay.addWidget(btn)
+        btn.clicked.connect(self.openEditor)
+        self.items = []
+        self.log = log
+
+    def openEditor(self):
+        self.log.info('Open editor {}', self.items)
+        rows = list(map(self.itToRow, self.items))
+        columns = [
+            Column(label='Chronology')
+            ,Column(label='Culture')
+            ,Column(hidden=True, empty=None)
+        ]
+
+        itd = InputTabDialog(columns, rows, self)
+        v = itd.exec_()
+        self.log.info('Editor: {}', v)
+        if v == 1:
+            self.items = list(map(self.rowToIt, itd.getRows()))
+            self.log.info('Editor input items {}', self.items)
+        self.log.info('Editor OK')
+
+    def itToRow(self, it):
+        return [it.get(s) for s in SRC_ATTRS]
+
+    def rowToIt(self, row):
+        return dict([(s, row[si])
+                     for (si, s) in enumerate(SRC_ATTRS)])
+
+    def setItems(self, items):
+        self.log.info('Set source items {}, {}', items, type(items))
+        self.items = items
+
+    def getItems(self):
+        self.log.info('Classifiaction {}', self.items)
+        return self.items
+
+
 def textEditor(label):
     return AttrEditor(label, QLineEdit())
+
+def itemEditor(label, log):
+    return AttrEditor(label,
+                      ItemEditorWidget(log),
+                      setHandler=lambda e, v: e.setItems(v),
+                      getHandler=lambda e: e.getItems())
 
 class ItemFormWidget(QWidget):
     def __init__(self, log, parent=None):
@@ -38,6 +92,11 @@ class ItemFormWidget(QWidget):
         self.input[name] = ed
         self.lay.addRow(ed.label, ed.widget)
 
+    def addItemEditor(self, name, label):
+        ed = itemEditor(label, self.log)
+        self.input[name] = ed
+        self.lay.addRow(ed.label, ed.widget)
+
     def setItem(self, item):
         self.log.info('Set item {}', item)
         for ed in self.input.values():
@@ -46,7 +105,8 @@ class ItemFormWidget(QWidget):
             return
         for (edName, ed) in self.input.items():
             v = item.value(edName)
-            if v:
+            if v is not None:
+                self.log.info('Set item attr {}: {}', edName, v)
                 ed.setValue(v)
 
     def mergeItem(self, item):
