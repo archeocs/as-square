@@ -97,7 +97,7 @@ class ItemFormWidget(QWidget):
         self.input[name] = ed
         self.lay.addRow(ed.label, ed.widget)
 
-    def setItem(self, item):
+    def setItem(self, item=None):
         self.log.info('Set item {}', item)
         for ed in self.input.values():
             ed.clear()
