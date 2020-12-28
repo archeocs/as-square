@@ -8,13 +8,15 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Install QGIS
-        run: sudo apt-get install python3-qgis
+        run: sudo apt-get install python3-qgis spatialite-bin
       - name: Check QGIS installation
         run: python3 -c "from qgis import core; print(core.__name__)"
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Build package
         run: make package
+      - name: Empty database
+        run: make init-db
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -45,4 +47,14 @@ jobs:
           asset_path: ./dist/plugins.xml
           asset_name: plugins.xml
           asset_content_type: text/xml
+      - name: Upload Empty database
+        id: upload-empty-database
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} 
+          asset_path: ./dist/empty-db.zip
+          asset_name: empty-db.zip
+          asset_content_type: application/zip
       

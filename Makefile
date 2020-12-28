@@ -1,6 +1,9 @@
 clean:
 	rm -rf dist build
 
+dirs:
+	mkdir -p dist build
+
 compile: clean
 	scripts/compile.sh
 
@@ -15,3 +18,6 @@ install: dist
 
 package: dist
 	scripts/package.sh
+
+init-db: dirs
+	scripts/empty-db.sh
