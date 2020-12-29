@@ -8,7 +8,7 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
       - name: Install QGIS
-        run: sudo apt-get install python3-qgis spatialite-bin
+        run: sudo apt-get update && sudo apt-get install python3-qgis spatialite-bin
       - name: Check QGIS installation
         run: python3 -c "from qgis import core; print(core.__name__)"
       - name: Checkout code
