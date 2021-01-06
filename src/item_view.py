@@ -28,7 +28,11 @@ class AttrEditor:
 
 class ItemEditorWidget(QWidget):
 
-    def __init__(self, log, parent=None):
+    def __init__(self,
+                 log,
+                 allowedChrono=[],
+                 allowedCulture = [],
+                 parent=None):
         QWidget.__init__(self, parent)
         lay = QVBoxLayout()
         self.setLayout(lay)
@@ -37,17 +41,19 @@ class ItemEditorWidget(QWidget):
         btn.clicked.connect(self.openEditor)
         self.items = []
         self.log = log
+        self.allowedChrono = allowedChrono
+        self.allowedCulture = allowedCulture
 
     def openEditor(self):
         self.log.info('Open editor {}', self.items)
         rows = list(map(self.itToRow, self.items))
         columns = [
-            Column(label='Chronology')
-            ,Column(label='Culture')
+            Column(self.allowedChrono, label='Chronology', log=self.log)
+            ,Column(self.allowedCulture, label='Culture', log=self.log)
             ,Column(hidden=True, empty=None)
         ]
 
-        itd = InputTabDialog(columns, rows, self)
+        itd = InputTabDialog(columns, rows, self, self.log)
         v = itd.exec_()
         self.log.info('Editor: {}', v)
         if v == 1:
@@ -56,9 +62,16 @@ class ItemEditorWidget(QWidget):
         self.log.info('Editor OK')
 
     def itToRow(self, it):
+        """
+        Converts record from AS_SOURCES to row, that is displayed in
+        classification editor
+        """
         return [it.get(s) for s in SRC_ATTRS]
 
     def rowToIt(self, row):
+        """
+        Converts row from editor to AS_SOURCES record
+        """
         return dict([(s, row[si])
                      for (si, s) in enumerate(SRC_ATTRS)])
 
@@ -74,9 +87,9 @@ class ItemEditorWidget(QWidget):
 def textEditor(label):
     return AttrEditor(label, QLineEdit())
 
-def itemEditor(label, log):
+def itemEditor(label, log, chrono=[], culture=[]):
     return AttrEditor(label,
-                      ItemEditorWidget(log),
+                      ItemEditorWidget(log, chrono, culture),
                       setHandler=lambda e, v: e.setItems(v),
                       getHandler=lambda e: e.getItems())
 
@@ -92,8 +105,8 @@ class ItemFormWidget(QWidget):
         self.input[name] = ed
         self.lay.addRow(ed.label, ed.widget)
 
-    def addItemEditor(self, name, label):
-        ed = itemEditor(label, self.log)
+    def addItemEditor(self, name, label, chrono=[], culture=[]):
+        ed = itemEditor(label, self.log, chrono, culture)
         self.input[name] = ed
         self.lay.addRow(ed.label, ed.widget)
 

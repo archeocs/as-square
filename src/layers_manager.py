@@ -124,12 +124,17 @@ class LayersManager:
             return True
         return False
 
+    def isNotNull(self, v):
+        return str(v) != 'NULL'
+
     def toItem2(self, feat, sources):
         self.log.info('Id: {}', feat.id())
         base = GeoItem(dict(self.recordAttrs), feat.geometry(), feat.id())
         names = feat.fields().names()
         for n in names:
-            base.setValue(n, feat[n])
+            value = feat[n]
+            if value is not None and self.isNotNull(value):
+                base.setValue(n, feat[n])
         if sources:
             base.setValue('sources', self.sourceItems(feat.id()))
         else:
@@ -146,7 +151,9 @@ class LayersManager:
             git['id'] = None
             names = f.fields().names()
             for n in names:
-                git[n.lower()] = f[n]
+                fieldValue = f[n]
+                if fieldValue is not None and self.isNotNull(fieldValue):
+                    git[n.lower()] = f[n]
             items.append(git)
         return items
 
