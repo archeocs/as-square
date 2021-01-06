@@ -14,22 +14,33 @@ class Cell:
 
 class Column:
 
-    def __init__(self, allowedValues=None, empty='', hidden=False, label=None):
+    def __init__(self, allowedValues=None, empty='', hidden=False, label=None, log=None):
         self.allowed = allowedValues
         self.combo = allowedValues is not None
         self.empty = empty
         self.hidden = hidden
         self.label = label
+        self.log = log
+
+    def printLog(self, msg, *args):
+        if self.log:
+            self.log.info(msg, *args)
 
     def modelItem(self, val):
+        self.printLog('modelItem: val {}, combo {}, allowed {}, type {}',
+                      val, self.combo, self.allowed, type(val))
+        if self.allowed:
+            self.printLog('val in allowd {}', (val in self.allowed))
         if self.combo and val in self.allowed:
-            return newItem(Cell(self.allowed[val], val))
+            cell = Cell(self.allowed[val], val)
+            self.printLog('Cell {}', str(cell))
+            return newItem(cell)
         else:
             return newItem(Cell(val))
 
     def getValue(self, item):
         if self.combo:
-            print('get combo', item)
+            self.printLog('get combo {}', item.data(role=Qt.EditRole))
             return item.data(role=Qt.EditRole)
         else:
             return item.data(role=Qt.DisplayRole)
@@ -42,7 +53,7 @@ class InputTabWidget(QWidget):
     accepted = pyqtSignal()
     canceled = pyqtSignal()
 
-    def __init__(self, modelDef, rows, parent=None):
+    def __init__(self, modelDef, rows, parent=None, log=None):
         QWidget.__init__(self, parent)
         lay = QVBoxLayout()
         self.setLayout(lay)
@@ -61,6 +72,7 @@ class InputTabWidget(QWidget):
 
         lay.addWidget(self.tab)
         lay.addWidget(self.createButtons())
+        self.log = log
 
     def initView(self, modelDef):
         tab = QTableView(self)
@@ -113,22 +125,25 @@ class InputTabWidget(QWidget):
         return buttons
 
     def getRows(self):
+        self.log.info('InputTabWidget.getRows() {}', self.model.rowCount())
         allRows = []
         for rc in range(self.model.rowCount()):
             row = []
             for (ci, md) in enumerate(self.modelDef):
                 sit = self.model.item(rc, ci)
+                self.log.info('Get value: {}, combo: {}, edit: {}, display: {}',
+                              md.getValue(sit), md.combo, sit.data(Qt.EditRole), sit.data(Qt.DisplayRole) )
                 row.append(md.getValue(sit))
             allRows.append(row)
         return allRows
 
 class InputTabDialog(QDialog):
 
-    def __init__(self, modelDef, rows, parent):
+    def __init__(self, modelDef, rows, parent, log=None):
         QDialog.__init__(self, parent)
         lay = QVBoxLayout()
         self.setLayout(lay)
-        self.widget = InputTabWidget(modelDef, rows, self)
+        self.widget = InputTabWidget(modelDef, rows, self, log)
         lay.addWidget(self.widget)
         self.widget.accepted.connect(self.accept)
         self.widget.canceled.connect(self.reject)
@@ -136,8 +151,6 @@ class InputTabDialog(QDialog):
 
     def getRows(self):
         return self.widget.getRows()
-
-
 
 class InputTabWindow(QMainWindow):
     def __init__(self):
@@ -180,7 +193,7 @@ class StartWindow(QMainWindow):
 
 def newItem(value):
     print(value)
-    if value.editText:
+    if value.editText is not None:
         sit = TypedItem()
         sit.setData(value.editText, role=Qt.EditRole)
     else:

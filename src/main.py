@@ -33,7 +33,14 @@ def formWidget(log, parent):
     form.addText('flint', 'Flint')
     form.addText('clay', 'Clay')
     form.addText('other', 'Other')
-    form.addItemEditor('sources', 'Classification')
+    form.addItemEditor('sources',
+                       'Classification',
+                       {'ZB': 'OWR', 'SC': 'Wcz. Śred C',
+                         'SD': 'Wcz. Śred D', 'SE': 'Wcz. Śred E',
+                         'SF': 'Wcz. Śred F',
+                         'SP': 'Późne Śred', 'N': 'Nowożytność',
+                         'N0': 'XX w.', '':None},
+                       {'NLJ':'KPL', 'NAK': 'KAK', 'BLZ': 'Łużycka', '':None})
     form.addText('author', 'Author')
     form.addText('s_remarks', 'Source remarks')
 
