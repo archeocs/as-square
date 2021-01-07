@@ -136,7 +136,7 @@ class LayersManagerTest(unittest.TestCase):
         feats = []
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
         man.handlers['grid_selected'] = lambda x: feats.append(x)
-
+        
         testFeat = self.feat()
         qgsProj.layers['grid_50_m'].handlers['selection_changed']([testFeat],'b','c')
 

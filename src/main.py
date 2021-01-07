@@ -5,6 +5,8 @@ from qgis.core import *
 from functools import partial
 from layers_manager import LayersManager
 from item_view import ItemFormWidget
+from migration import *
+import os
 
 class LogAdapter:
 
@@ -126,12 +128,77 @@ class Plugin:
         self.iface.addToolBarIcon(self.qgisAction)
         self.iface.addPluginToMenu("as-square",self.qgisAction)
 
+        self.checkDbAction = QAction('Check DB version', self.iface.mainWindow())
+        self.checkDbAction.triggered.connect(self.checkDb)
+
+        self.migrateDbAction = QAction('Migrate Database', self.iface.mainWindow())
+        self.migrateDbAction.triggered.connect(self.migrateDb)
+
+        self.iface.addPluginToMenu('as-square', self.checkDbAction)
+        self.iface.addPluginToMenu('as-square', self.migrateDbAction)
+
     def unload(self):
         self.iface.removePluginMenu('as-square', self.qgisAction)
         self.iface.removeToolBarIcon(self.qgisAction)
         
     def run(self):
         self.mainWidget = start_plugin(self.iface.mainWindow(), iface=self.iface)
+
+    def migrateDb(self):
+        log = QgsLogAdapter('migrate db')
+        selectedDb = QInputDialog.getItem(self.iface.mainWindow(),
+                                          'Migrated Database version',
+                                          'Select database to migrate',
+                                          self.dbList(log),
+                                          editable=False)
+        if selectedDb[1]:
+            log.info('selected: {} {}', selectedDb[0], os.path.dirname(__file__))
+            base = os.path.dirname(__file__)
+            scriptPath = os.path.join(base, 'assquare-migration-db.sql' )
+            result = migrateDb(selectedDb[0], scriptPath)
+            if not result[0]:
+                self.iface.messageBar().pushMessage('Database migration failed '
+                                                    + str(result[2]),
+                                                    level=Qgis.Info)
+            elif result[1] is None:
+                self.iface.messageBar().pushMessage('Database up to date', level=Qgis.Info)
+            else:
+                self.iface.messageBar().pushMessage('Database migrated to version '
+                                                    + str(result[1]),
+                                                    level=Qgis.Info)
+
+    def checkDb(self):
+        log = QgsLogAdapter('check db')
+        selectedDb = QInputDialog.getItem(self.iface.mainWindow(),
+                                          'Check DB version',
+                                          'Select database to check',
+                                          self.dbList(log),
+                                          editable=False)
+        if selectedDb[1]:
+            log.info('selected: {} {}', selectedDb[0], os.path.dirname(__file__))
+            base = os.path.dirname(__file__)
+            scriptPath = os.path.join(base, 'assquare-migration-db.sql' )
+            check = checkDb(selectedDb[0], scriptPath)
+            log.info('check result {}', check)
+            if check:
+                if check[0] == check[1]:
+                    self.iface.messageBar().pushMessage('Database up to date', level=Qgis.Info)
+                elif check[0] < check[1]:
+                    self.iface.messageBar().pushMessage(
+                        'Database at version {}. Expected version {}'.format(
+                            check[0], check[1]), level=Qgis.Info)
+            else:
+                self.iface.messageBar().pushMessage('Check error', level=Qgis.Info)
+
+    def dbList(self, log):
+        allDb = []
+        settings = QgsSettings()
+        settings.beginGroup('SpatiaLite/connections')
+        for k in settings.allKeys():
+            if k.endswith('path'):
+                log.info('{} {}', k, settings.value(k))
+                allDb.append(settings.value(k))
+        return allDb
 
 def start_plugin(parent, iface):
     log = QgsLogAdapter('as-square')

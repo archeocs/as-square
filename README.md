@@ -24,3 +24,9 @@ with supported schema can be downloaded from [link](https://github.com/archeocs/
 
 You can learn more about spatialite support in [QGIS documentation](https://docs.qgis.org/3.10/en/docs/training_manual/databases/spatialite.html)
 
+
+## Database migration
+
+Plugin requires specific database schema to correct working. To check database schema run from menu `Plugins` > `as-square` > `Check DB Version` and
+select from list database, that is supposed to be checked. If message informs that database is not up to date, run from menu 
+`Plugins` > `as-square` > `Migrate Database`.
