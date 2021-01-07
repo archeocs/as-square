@@ -15,4 +15,4 @@ sed "s/@__PLUGIN_VERSION__@/$TAG/" src/metadata.txt > build/metadata.txt
 sed "s/@__PLUGIN_VERSION__@/$TAG/" src/plugins.xml > build/plugins.xml
 
 cp src/test_*.py build/
-cp src/main.py src/layers_manager.py src/item_view.py src/items.py src/object_dict.py src/input_tab2.py build/
+cp src/main.py src/layers_manager.py src/item_view.py src/items.py src/object_dict.py src/input_tab2.py src/migration.py build/
