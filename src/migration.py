@@ -27,9 +27,7 @@ def updateQuery(db, query, params={}):
         q.bindValue(':'+k, v)
     return (q.exec_(query), q.lastError())
 
-def checkVersion(dbPath, last):
-    db = QSqlDatabase.addDatabase('QSPATIALITE')
-    db.setDatabaseName(dbPath)
+def checkVersion(db, last):
     db.open()
 
     dbver = selectQuery(db,
@@ -39,10 +37,10 @@ def checkVersion(dbPath, last):
     if dbver[0]:
         row = dbver[0][0]
         saved = row.get('SVALUE', None) or row.get('svalue', None)
-        return int(saved) - int(last)
+        return (int(saved), int(saved) - int(last))
     else:
-        print(dbver[1].text())
-    return -1
+        return None
+    return (int(saved), -1)
 
 def readScript(scriptPath):
     with open(scriptPath) as sf:
@@ -66,9 +64,8 @@ def readScript(scriptPath):
         print(versions, len(versions))
         return versions
 
-def applyVersion(dbPath, stmts, num):
-    db = QSqlDatabase.addDatabase('QSPATIALITE')
-    db.setDatabaseName(dbPath)
+def applyVersion(db, stmts, num):
+
     db.open()
     for s in stmts:
         result = updateQuery(db, s)
@@ -76,21 +73,36 @@ def applyVersion(dbPath, stmts, num):
             print('Migration failure on version', num, result[1].databaseText(), result[1].text())
             db.rollback()
             db.close()
-            return
+            return False
     ver = updateQuery(db, "UPDATE AS_SETTINGS SET SVALUE='{}' WHERE SKEY='{}'".format(num, 'DB_VERSION'))
-    print('VER ', ver[0], ver[1].databaseText())
     print(db.commit())
     print('updated to version', num)
     db.close()
+    return True
+
+def migrateDb(dbPath, scriptPath):
+    script = readScript(scriptPath)
+    db = QSqlDatabase.addDatabase('QSPATIALITE')
+    db.setDatabaseName(dbPath)
+    check = checkVersion(db, len(script) - 1)
+    if check is None:
+        return (False, None, 'Checking version failed')
+    start = len(script) + check[1]
+    print('start', start)
+    if check[1] < 0:
+        for (vi, v) in enumerate(script):
+            if vi >= start and not applyVersion(db, v, vi):
+                return (False, None, 'Migration to version ' + str(vi) + ' failed')
+    else:
+        return (True, None, None)
+    return (True, len(script) -1, None)
 
 if __name__ == '__main__':
-    db = '/home/milosz/git/as-square/empty-db.sqlite'
-    script = readScript('/home/milosz/git/as-square/assquare-migration-db.sql')
-    verDiff = checkVersion(db, len(script) - 1)
-    start = len(script) - verDiff
-    if verDiff < 0:
-        for (vi, v) in enumerate(script):
-            applyVersion(db, v, vi)
+    result = migrateDb('/home/milosz/git/as-square/empty-db.sqlite',
+              '/home/milosz/git/as-square/assquare-migration-db.sql')
+    if not result[0]:
+        print('Migration failed ', result[2])
+    elif result[1] is None:
+        print('Database already up to date')
     else:
-        print('DB up to date')
-    print('OK')
+        print('Databae migrated to version', result[1])
