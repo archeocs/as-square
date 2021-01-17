@@ -2,6 +2,8 @@ from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
+from lang import tr
+
 class Cell:
 
     def __init__(self, display, key=None):
@@ -113,7 +115,7 @@ class InputTabWidget(QWidget):
         okBtn = QPushButton('OK')
         okBtn.clicked.connect(self.accepted.emit)
 
-        cancelBtn = QPushButton('Cancel')
+        cancelBtn = QPushButton(tr('cancel'))
         cancelBtn.clicked.connect(self.canceled.emit)
 
 

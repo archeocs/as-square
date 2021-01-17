@@ -10,7 +10,7 @@ compile: clean
 test: compile
 	python3 -m unittest discover -s build
 
-dist: test
+dist: transcompile test
 	scripts/dist.sh
 
 install: dist
@@ -21,3 +21,6 @@ package: dist
 
 init-db: dirs
 	scripts/empty-db.sh
+
+transcompile: compile
+	scripts/trans-compile.sh

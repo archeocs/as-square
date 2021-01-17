@@ -4,6 +4,7 @@ from PyQt5.QtWidgets import *
 
 from object_dict import ObjectDict as od
 from input_tab2 import *
+from lang import tr
 
 SRC_ATTRS = ['chronology', 'culture', 'id']
 
@@ -36,7 +37,7 @@ class ItemEditorWidget(QWidget):
         QWidget.__init__(self, parent)
         lay = QVBoxLayout()
         self.setLayout(lay)
-        btn = QPushButton('Open editor')
+        btn = QPushButton(tr('open_editor'))
         lay.addWidget(btn)
         btn.clicked.connect(self.openEditor)
         self.items = []
@@ -48,8 +49,8 @@ class ItemEditorWidget(QWidget):
         self.log.info('Open editor {}', self.items)
         rows = list(map(self.itToRow, self.items))
         columns = [
-            Column(self.allowedChrono, label='Chronology', log=self.log)
-            ,Column(self.allowedCulture, label='Culture', log=self.log)
+            Column(self.allowedChrono, label=tr('chronology'), log=self.log)
+            ,Column(self.allowedCulture, label=tr('culture'), log=self.log)
             ,Column(hidden=True, empty=None)
         ]
 

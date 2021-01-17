@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.8.0
+
+- feat: i18n - Polish translations. English translation are used by 
+  default 
+
 ## 0.7.0
 
 - feat: Database migrations - user can trigger database migration when

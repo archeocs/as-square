@@ -6,6 +6,7 @@ from functools import partial
 from layers_manager import LayersManager
 from item_view import ItemFormWidget
 from migration import *
+from lang import tr
 import os
 
 class LogAdapter:
@@ -23,35 +24,35 @@ class StdOutLogAdapter(LogAdapter):
 
 def formWidget(log, parent):
     form = ItemFormWidget(log, parent)
-    form.addText('square_id', 'Square')
-    form.addText('survey_date', 'Date')
-    form.addText('azp', 'AZP number')
-    form.addText('people', 'People')
+    form.addText('square_id', tr('square.id'))
+    form.addText('survey_date', tr('survey.date'))
+    form.addText('azp', tr('azp.number'))
+    form.addText('people', tr('people'))
        
-    form.addText('pottery', 'Pottery')
-    form.addText('glass', 'Glass')
-    form.addText('bones', 'Bones')
-    form.addText('metal', 'Metal')
-    form.addText('flint', 'Flint')
-    form.addText('clay', 'Clay')
-    form.addText('other', 'Other')
+    form.addText('pottery', tr('pottery'))
+    form.addText('glass', tr('glass'))
+    form.addText('bones', tr('bones'))
+    form.addText('metal', tr('metal'))
+    form.addText('flint', tr('flint'))
+    form.addText('clay', tr('clay'))
+    form.addText('other', tr('other'))
     form.addItemEditor('sources',
-                       'Classification',
+                       tr('classification'),
                        {'ZB': 'OWR', 'SC': 'Wcz. Śred C',
                          'SD': 'Wcz. Śred D', 'SE': 'Wcz. Śred E',
                          'SF': 'Wcz. Śred F',
                          'SP': 'Późne Śred', 'N': 'Nowożytność',
                          'N0': 'XX w.', '':None},
                        {'NLJ':'KPL', 'NAK': 'KAK', 'BLZ': 'Łużycka', '':None})
-    form.addText('author', 'Author')
-    form.addText('s_remarks', 'Source remarks')
+    form.addText('author', tr('author'))
+    form.addText('s_remarks', tr('source_remarks'))
 
-    form.addText('observation', 'Observation')
-    form.addText('temperature', 'Temperature')
-    form.addText('weather', 'Weather')
-    form.addText('plow_depth', 'Plow Depth')
-    form.addText('agro_treatments', 'Agricultural Treatments')
-    form.addText('remarks', 'Remarks')
+    form.addText('observation', tr('observation'))
+    form.addText('temperature', tr('temperature'))
+    form.addText('weather', tr('weather'))
+    form.addText('plow_depth', tr('plow_depth'))
+    form.addText('agro_treatments', tr('agro_treat'))
+    form.addText('remarks', tr('remarks'))
     return form
 
 class AsSquareWidget(QDockWidget):
@@ -63,12 +64,12 @@ class AsSquareWidget(QDockWidget):
         lay = QVBoxLayout(self)
         self.status = QStatusBar(self)
         self.form = formWidget(log, wgt)
-        lay.addWidget(self.createActions(['Add', 'Update']))
+        lay.addWidget(self.createActions(['add_square', 'update_square']))
         lay.addWidget(self.form)
         lay.addWidget(self.status, alignment=Qt.AlignBottom)
         wgt.setLayout(lay)
-        self.actionsMap['Add'].pressed.connect(self.addAction)
-        self.actionsMap['Update'].pressed.connect(self.updateAction)
+        self.actionsMap['add_square'].pressed.connect(self.addAction)
+        self.actionsMap['update_square'].pressed.connect(self.updateAction)
 
         self.setWidget(wgt)
 
@@ -80,7 +81,7 @@ class AsSquareWidget(QDockWidget):
         self.log.info('Initialized')
 
     def recordsRemoved(self):
-        self.iface.messageBar().pushMessage('Removed layer AS_RECORD. Please add layer to project',
+        self.iface.messageBar().pushMessage(tr('removed_as_records_warning'),
                                             Qgis.Warning)
         self.form.setItem(None)
 
@@ -89,8 +90,7 @@ class AsSquareWidget(QDockWidget):
         if self.layersMgr.isReady():
             self.layersMgr.addItem(itNew)
         else:
-            self.iface.messageBar().pushMessage('''Can't add new record.
-            Check if layer AS_RECORDS is added to project and try again''',
+            self.iface.messageBar().pushMessage(tr('missing_as_records_warning'),
                                             Qgis.Warning)
 
     def updateAction(self):
@@ -101,7 +101,7 @@ class AsSquareWidget(QDockWidget):
         self.actionsMap = {}
         actionsGroup = QDialogButtonBox(self)
         for a in actions:
-            btn = actionsGroup.addButton(a,QDialogButtonBox.ActionRole)
+            btn = actionsGroup.addButton(tr(a), QDialogButtonBox.ActionRole)
             self.actionsMap[a] = btn
         return actionsGroup
 
@@ -128,10 +128,10 @@ class Plugin:
         self.iface.addToolBarIcon(self.qgisAction)
         self.iface.addPluginToMenu("as-square",self.qgisAction)
 
-        self.checkDbAction = QAction('Check DB version', self.iface.mainWindow())
+        self.checkDbAction = QAction(tr('check_db_action'), self.iface.mainWindow())
         self.checkDbAction.triggered.connect(self.checkDb)
 
-        self.migrateDbAction = QAction('Migrate Database', self.iface.mainWindow())
+        self.migrateDbAction = QAction(tr('migrate_db_action'), self.iface.mainWindow())
         self.migrateDbAction.triggered.connect(self.migrateDb)
 
         self.iface.addPluginToMenu('as-square', self.checkDbAction)
@@ -147,8 +147,8 @@ class Plugin:
     def migrateDb(self):
         log = QgsLogAdapter('migrate db')
         selectedDb = QInputDialog.getItem(self.iface.mainWindow(),
-                                          'Migrated Database version',
-                                          'Select database to migrate',
+                                          tr('migrate_db_message'),
+                                          tr('migrate_db_select_db'),
                                           self.dbList(log),
                                           editable=False)
         if selectedDb[1]:
@@ -157,21 +157,21 @@ class Plugin:
             scriptPath = os.path.join(base, 'assquare-migration-db.sql' )
             result = migrateDb(selectedDb[0], scriptPath)
             if not result[0]:
-                self.iface.messageBar().pushMessage('Database migration failed '
-                                                    + str(result[2]),
+                self.iface.messageBar().pushMessage(tr('migrate_db_error')
+                                                    + ' ' + str(result[2]),
                                                     level=Qgis.Info)
             elif result[1] is None:
-                self.iface.messageBar().pushMessage('Database up to date', level=Qgis.Info)
+                self.iface.messageBar().pushMessage(tr('migrate_db_up_to_date_info'), level=Qgis.Info)
             else:
-                self.iface.messageBar().pushMessage('Database migrated to version '
-                                                    + str(result[1]),
+                self.iface.messageBar().pushMessage(tr('migrate_db_success')
+                                                    + ' ' + str(result[1]),
                                                     level=Qgis.Info)
 
     def checkDb(self):
         log = QgsLogAdapter('check db')
         selectedDb = QInputDialog.getItem(self.iface.mainWindow(),
-                                          'Check DB version',
-                                          'Select database to check',
+                                          tr('check_db_message'),
+                                          tr('check_db_select'),
                                           self.dbList(log),
                                           editable=False)
         if selectedDb[1]:
@@ -182,13 +182,13 @@ class Plugin:
             log.info('check result {}', check)
             if check:
                 if check[0] == check[1]:
-                    self.iface.messageBar().pushMessage('Database up to date', level=Qgis.Info)
+                    self.iface.messageBar().pushMessage(tr('check_db_up_to_date'), level=Qgis.Info)
                 elif check[0] < check[1]:
                     self.iface.messageBar().pushMessage(
-                        'Database at version {}. Expected version {}'.format(
+                        tr('check_db_result').format(
                             check[0], check[1]), level=Qgis.Info)
             else:
-                self.iface.messageBar().pushMessage('Check error', level=Qgis.Info)
+                self.iface.messageBar().pushMessage(tr('check_db_error'), level=Qgis.Info)
 
     def dbList(self, log):
         allDb = []
