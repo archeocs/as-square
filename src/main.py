@@ -6,6 +6,7 @@ from functools import partial
 from layers_manager import LayersManager
 from item_view import ItemFormWidget
 from migration import *
+from lang import tr
 import os
 
 class LogAdapter:
@@ -23,13 +24,13 @@ class StdOutLogAdapter(LogAdapter):
 
 def formWidget(log, parent):
     form = ItemFormWidget(log, parent)
-    form.addText('square_id', 'Square')
-    form.addText('survey_date', 'Date')
-    form.addText('azp', 'AZP number')
-    form.addText('people', 'People')
+    form.addText('square_id', tr('square.id'))
+    form.addText('survey_date', tr('survey.date'))
+    form.addText('azp', tr('azp.number'))
+    form.addText('people', tr('people'))
        
-    form.addText('pottery', 'Pottery')
-    form.addText('glass', 'Glass')
+    form.addText('pottery', tr('pottery'))
+    form.addText('glass', tr('glass'))
     form.addText('bones', 'Bones')
     form.addText('metal', 'Metal')
     form.addText('flint', 'Flint')
