@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 0.9.0
+ 
+ - support multipart layers, including ones saved in non-spatialite
+   sources (for example SHP files)
+
 ## 0.8.0
 
 - feat: i18n - Polish translations. English translation are used by 
