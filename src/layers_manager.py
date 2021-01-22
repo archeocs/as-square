@@ -54,6 +54,7 @@ class LayersManager:
         self.layFactory = layFactory
         self.txManager = TxManager()
         self.baseAttrs = {}
+        self.recordAttrs = {}
         self.sources = None
         self.squares = None
         ###################
