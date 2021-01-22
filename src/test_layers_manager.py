@@ -5,6 +5,9 @@ from layers_manager import *
 from items import GeoItem
 from main import StdOutLogAdapter
 
+MULTI_POLYGON_WKT = 'MultiPolygon (((387625 516820, 387675 516820, 387675 516770, 387625 516770, 387625 516820)))'
+POLYGON_WKT = 'Polygon ((387625 516820, 387675 516820, 387675 516770, 387625 516770, 387625 516820))'
+
 class TestSignal:
 
     def __init__(self):
@@ -368,6 +371,37 @@ class LayersManagerTest(unittest.TestCase):
         self.assertEqual(man.sources.dataProvider().features[0]['square'], 1234)
         self.assertEqual(man.squares.dataProvider().features[0]['square'], 1111)
 
+    def test_add_item_copy_polygon_geometry(self):
+        def layerFactory(s):
+            return Layer(name=s)
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'as_sources': Layer(name='as_sources', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
+        man.addItem(GeoItem({'square': 1111, 'sources': [{'culture': 'XXX'}]},
+                            geom=QgsGeometry.fromWkt(POLYGON_WKT)))
+
+        self.assertEqual(len(man.squares.dataProvider().features), 1)
+        wkt = man.squares.dataProvider().features[0].geometry().asWkt()
+        self.assertEqual(wkt, POLYGON_WKT)
+
+    def test_add_item_convert_multipart_polygon(self):
+        def layerFactory(s):
+            return Layer(name=s)
+        qgsProj = QgsProj(layers={'as_records': Layer(),
+                                  'as_squares': Layer(name='as_squares', fields=['square']),
+                                  'as_sources': Layer(name='as_sources', fields=['square']),
+                                  'grid_50_m': Layer(name='grid_50_m')})
+        man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
+        man.addItem(GeoItem({'square': 1111, 'sources': [{'culture': 'XXX'}]},
+                            geom=QgsGeometry.fromWkt(MULTI_POLYGON_WKT)))
+
+        self.assertEqual(len(man.squares.dataProvider().features), 1)
+        wkt = man.squares.dataProvider().features[0].geometry().asWkt()
+        self.assertEqual(wkt, POLYGON_WKT)
+
+
     def test_update_item(self):
         def layerFactory(s):
             return Layer(name=s)
@@ -381,8 +415,7 @@ class LayersManagerTest(unittest.TestCase):
 
         self.assertIn((4444, 0, 1111), man.squares.dataProvider().attrChanges)
 
-    def feat(self, fields={'square': 5}):
-        #f = QgsField('square', typeName='int')
+    def feat(self, fields={'square': 5}, geometry=POLYGON_WKT):
         ff = QgsFields()
         for (k, v) in fields.items():
             ff.append(QgsField(k, typeName=str(type(v))))
@@ -390,6 +423,7 @@ class LayersManagerTest(unittest.TestCase):
         for (k, v) in fields.items():
             qf[k] = v
         qf.setId(12345)
+        qf.setGeometry(QgsGeometry.fromWkt(geometry))
         return qf
 
     def feat_item(self, fields={'square': 5}, sources=[]):

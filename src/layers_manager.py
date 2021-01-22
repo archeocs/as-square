@@ -307,10 +307,17 @@ class LayersManager:
                 feat = self.updateSourceFeat(QgsFeature(allFields), r)
                 feat['square'] = squareId
                 self.sources.addFeature(feat)
-                
+
+    def itemGeometry(self, item):
+        copy = QgsGeometry(item.geometry)
+        if copy.isMultipart():
+            success = copy.convertToSingleType()
+            self.log.info('Multipart geomerty converted {}', success)
+        return copy
+
     def addItem(self, item):
         sqFeat = self.updateFeature(QgsFeature(self.squares.fields()), item)
-        sqFeat.setGeometry(item.geometry)
+        sqFeat.setGeometry(self.itemGeometry(item))
         srcFeats = []
         for isr in item.value('sources'):
             sf = self.updateSourceFeat(
