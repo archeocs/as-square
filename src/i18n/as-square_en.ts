@@ -198,5 +198,25 @@
         <source>chronology</source>
         <translation>Chronology</translation>
     </message>
+    <message>
+        <location filename="../main.py" line="55"/>
+        <source>maybe</source>
+        <translation>?</translation>
+    </message>
+    <message>
+        <location filename="../main.py" line="55"/>
+        <source>relation</source>
+        <translation>+/-</translation>
+    </message>
+    <message>
+        <location filename="../main.py" line="55"/>
+        <source>maybe</source>
+        <translation>?</translation>
+    </message>
+    <message>
+        <location filename="../main.py" line="55"/>
+        <source>relation</source>
+        <translation>+/-</translation>
+    </message>
 </context>
 </TS>

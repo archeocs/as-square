@@ -6,7 +6,7 @@ from object_dict import ObjectDict as od
 from input_tab2 import *
 from lang import tr
 
-SRC_ATTRS = ['chronology', 'culture', 'id']
+SRC_ATTRS = ['chronology_maybe', 'chronology', 'chronology_rel', 'chronology2', 'culture_maybe', 'culture', 'culture_rel', 'culture2', 'id']
 
 class AttrEditor:
 
@@ -49,7 +49,13 @@ class ItemEditorWidget(QWidget):
         self.log.info('Open editor {}', self.items)
         rows = list(map(self.itToRow, self.items))
         columns = [
-            Column(self.allowedChrono, label=tr('chronology'), log=self.log)
+            Column({'':None, '?':'?'}, label=tr('maybe'), log=self.log)
+            ,Column(self.allowedChrono, label=tr('chronology'), log=self.log)
+            ,Column({'R':'-', 'B':'/'}, label=tr('relation'), log=self.log)
+            ,Column(self.allowedChrono, label=tr('chronology'), log=self.log)
+            ,Column({'':None, '?':'?'}, label=tr('maybe'), log=self.log)
+            ,Column(self.allowedCulture, label=tr('culture'), log=self.log)
+            ,Column({'R':'-', 'B':'/'}, label=tr('relation'), log=self.log)
             ,Column(self.allowedCulture, label=tr('culture'), log=self.log)
             ,Column(hidden=True, empty=None)
         ]
