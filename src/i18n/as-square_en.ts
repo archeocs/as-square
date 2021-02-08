@@ -74,6 +74,11 @@
         <translation>Classification Remarks</translation>
     </message>
     <message>
+        <location filename="../main.py" line="48"/>
+        <source>cls_remarks</source>
+        <translation>Remarks</translation>
+    </message>
+    <message>
         <location filename="../main.py" line="50"/>
         <source>observation</source>
         <translation>Field conditions</translation>

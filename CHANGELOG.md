@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 0.10.0
+
+ - feat: user can set more classification details
+
 ## 0.9.0
  
  - support multipart layers, including ones saved in non-spatialite
