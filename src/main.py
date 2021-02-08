@@ -154,7 +154,7 @@ class Plugin:
         if selectedDb[1]:
             log.info('selected: {} {}', selectedDb[0], os.path.dirname(__file__))
             base = os.path.dirname(__file__)
-            scriptPath = os.path.join(base, 'assquare-migration-db.sql' )
+            scriptPath = os.path.join(base, 'as-square-migration-db.sql' )
             result = migrateDb(selectedDb[0], scriptPath)
             if not result[0]:
                 self.iface.messageBar().pushMessage(tr('migrate_db_error')
@@ -177,7 +177,7 @@ class Plugin:
         if selectedDb[1]:
             log.info('selected: {} {}', selectedDb[0], os.path.dirname(__file__))
             base = os.path.dirname(__file__)
-            scriptPath = os.path.join(base, 'assquare-migration-db.sql' )
+            scriptPath = os.path.join(base, 'as-square-migration-db.sql' )
             check = checkDb(selectedDb[0], scriptPath)
             log.info('check result {}', check)
             if check:

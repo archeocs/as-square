@@ -7,7 +7,7 @@ dirs:
 compile: clean
 	scripts/compile.sh
 
-test: compile
+test: test-migration compile
 	python3 -m unittest discover -s build
 
 dist: transcompile test
@@ -21,6 +21,9 @@ package: dist
 
 init-db: dirs
 	scripts/empty-db.sh
+
+test-migration: dirs
+	scripts/test-migration.sh
 
 transcompile: compile
 	scripts/trans-compile.sh
