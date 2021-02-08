@@ -208,5 +208,10 @@
         <source>relation</source>
         <translation>+/-</translation>
     </message>
+    <message>
+        <location filename="../main.py" line="48"/>
+        <source>cls_remarks</source>
+        <translation>Uwagi</translation>
+    </message>
 </context>
 </TS>

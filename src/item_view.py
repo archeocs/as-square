@@ -6,7 +6,11 @@ from object_dict import ObjectDict as od
 from input_tab2 import *
 from lang import tr
 
-SRC_ATTRS = ['chronology_maybe', 'chronology', 'chronology_rel', 'chronology2', 'culture_maybe', 'culture', 'culture_rel', 'culture2', 'id']
+SRC_ATTRS = ['chronology_maybe', 'chronology', 'chronology_rel', 'chronology2',
+             'culture_maybe', 'culture', 'culture_rel', 'culture2',
+             'cls_author', 'cls_pottery', 'cls_glass', 'cls_bones',
+             'cls_metal', 'cls_flint', 'cls_clay', 'cls_other', 'cls_remarks',
+             'id']
 
 class AttrEditor:
 
@@ -57,6 +61,15 @@ class ItemEditorWidget(QWidget):
             ,Column(self.allowedCulture, label=tr('culture'), log=self.log)
             ,Column({'R':'-', 'B':'/'}, label=tr('relation'), log=self.log)
             ,Column(self.allowedCulture, label=tr('culture'), log=self.log)
+            ,Column(label=tr('author'))
+            ,Column(label=tr('pottery'))
+            ,Column(label=tr('glass'))
+            ,Column(label=tr('bones'))
+            ,Column(label=tr('metal'))
+            ,Column(label=tr('flint'))
+            ,Column(label=tr('clay'))
+            ,Column(label=tr('other'))
+            ,Column(label=tr('cls_remarks'))
             ,Column(hidden=True, empty=None)
         ]
 
