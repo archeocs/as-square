@@ -35,6 +35,9 @@ Repozytorium `AS-SQUARE` znajduje się pod adresem **https://github.com/archeocs
 8. Naciśnij przycisk `Wczytaj ponownie zawartość repozytoriów`.
 9. Naciśnij przycisk `Zamknij`.
 
+Po konifiguracji repozytorium wtyczka `AS-SQUARE` powinna zostać wyświetlona na 
+liście gotowych do instalacji. 
+
 ### Instalacja wtyczki
 
 1. Z menu `Wtyczki` wybierz `Zarządzanie wtyczkami...`.
@@ -53,9 +56,63 @@ Repozytorium `AS-SQUARE` znajduje się pod adresem **https://github.com/archeocs
 
 ## Aktualizacja
 
-[TBD]
+Aktualizacje wtyczki `AS-SQUARE` uzupełniają jej funkcje o nowe możliwości oraz naprawiają 
+odkryte błędy. Użytkownik powinien regularnie sprawdzać najnowszą wersję programu. 
 
-## Uruchomienie
+### Sprawdzanie wersji wtyczki
+
+1. Z menu `Wtyczki` wybierz `Zarządzanie wtyczkami...`.
+2. Po lewej stronie okna wybierz sekcję `Wszystkie`.
+3. W polu tekstowym z lupą na górze okna wpisz `as-square`
+![Repozytorium 1](2_Aktualizacja_nowa_wersja.png)
+4. Zaznacz wtyczkę `as-square`.
+5. W panelu po prawej porównaj wartości `Zainstalowana wersja` oraz `Dostępna wersja`.
+
+### Aktualizacja wtyczki
+
+1. Z menu `Wtyczki` wybierz `Zarządzanie wtyczkami...`.
+2. Po lewej stronie okna wybierz sekcję `Wszystkie`.
+3. W polu tekstowym z lupą na górze okna wpisz `as-square`
+![Repozytorium 1](2_Aktualizacja_nowa_wersja.png)
+4. Zaznacz `as-square` jeżeli jest widoczna na liście.
+5. Kliknij przycisk `Aktualizuj wtyczkę`.
+
+Po aktualizacji wtyczka może wymagać zmian w bazie danych, bez których nie będzie działała 
+prawidłowo. Po każdej aktualizacji użytkownik powinien sprawdzić, czy wprowadzenie zmian 
+jest konieczne. Wtyczka `AS-SQUARE` udostępnia użytkownikom funkcje do sprawdzania wersji 
+bazy danych oraz wprowadzania koniecznych zmian.
+
+### Sprawdzanie wersji bazy danych
+
+1. Sprawdź, czy baza jest widoczna w panelu `Przeglądarka`.
+![Migracja](2_Aktualizacja_migracja_db_1.png)
+2. Z menu `Wtyczki` wybierz `as-square` a następnie `Sprawdź bazę danych`.
+3. Z rozwijanej listy wybierz bazę, która powinna zostać sprawdzona.
+![Migracja](2_Aktualizacja_migracja_db_2.png)
+4. Kliknij przycisk `OK`.
+5. Na górze ekranu pojawi się komunikat `Wykonaj migrację` należy przeprowadzić 
+ migrację bazy.
+ ![Migracja](2_Aktualizacja_migracja_db_3.png)
+6. Jeżeli komunikat mówi `Baza jest aktualna` to znaczy, że migrania nie jest 
+konieczna.
+![Migracja](2_Aktualizacja_migracja_db_4.png)
+
+### Migracja bazy danych
+
+** UWAGA! Przed migracją bazy danych należy wykonać kopię bezpieczeństwa bazy!
+Skopiuj plik bazy danych do innego katalogu. W przypadku niepowodzenia migracji
+będziesz mógł go wykorzystać do przywrócenia poprzedniej wersji bazy **
+
+1. Sprawdź, czy baza jest widoczna w panelu `Przeglądarka`.
+![Migracja](2_Aktualizacja_migracja_db_1.png) 
+2. Z menu `Wtyczki` wybierz `as-square` a następnie `Migruj bazę danych`.
+3. Z rozwijanej listy wybierz bazę, która powinna zostać zaktualizowana.
+4. Kliknij przycisk `OK`.
+5. Jeżeli migracja zakończyła się powodzeniem, zostanie wyświetlony komunikat 
+`Migracja zakończona sukcesem`.
+![Migracja](2_Aktualizacja_migracja_db_sukces.png)
+
+## Pierwsze użycie
 
 [TBD]
 
