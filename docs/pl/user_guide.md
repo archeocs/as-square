@@ -53,6 +53,32 @@ liście gotowych do instalacji.
 9. Wyłącz program QGIS i uruchom ponownie.
 10. Upewnij się, że przycisk `as-square` jest widoczny na pasku narzędzi na górze głównego 
    okna programu.
+   
+## Baza danych
+
+Działanie wtyczki polega na zapisywaniu danych w przestrzennej bazie danych. Wtyczka jest
+dostosowana do pracy z bazą [Spatialite](https://www.gaia-gis.it/fossil/libspatialite/home).
+Każdorazowo przed rozpoczęciem pracy z wtyczką `AS-SQUARE` konieczne jest wczytanie z 
+przestrzennej bazy danych odpowiedniej warstwy wektorowej o nazwie `AS_RECORDS`. 
+
+Bazę danych z warstwą `AS_RECORDS` można pobrać 
+[klikając na link](https://github.com/archeocs/as-square/releases/latest/download/empty-db.zip) 
+
+Praca metodą kwadratów analitycznych polega na dodawaniu informacji archeologicznych dla
+kwadratów o krawędzi 10 metrów lub 50 metrów, na które dzieli się obszar podlegający badaniom. 
+
+1. Siatka kwadratów powinna zostać zapisana w warstwie wektorowej o nazwie:
+
+* `GRID_10_M` dla siatki z kwadratami 10 metrów
+* `GRID_50_M` dla siatki z kwadratami 50 metrów
+
+2. Warstwa wektorowa powinna posiadać następujące atrybuty:
+
+* `SQUARE_ID` - unikatowy identyfikator kwadratu w ramach siatki
+* `GEOMETRY` - współrzędne geograficzne
+* `SQUARE_DIMENSION` - zawiera stałą wartość: 50 dla warstwy `GRID_50_M` albo 10 dla `GRID_10_M`
+
+![Baza danych](3_Baza_danych_warstwy.png)
 
 ## Aktualizacja
 
@@ -99,12 +125,11 @@ konieczna.
 
 ### Migracja bazy danych
 
-** UWAGA! Przed migracją bazy danych należy wykonać kopię bezpieczeństwa bazy!
+**UWAGA! Przed migracją bazy danych należy wykonać kopię bezpieczeństwa bazy!
 Skopiuj plik bazy danych do innego katalogu. W przypadku niepowodzenia migracji
-będziesz mógł go wykorzystać do przywrócenia poprzedniej wersji bazy **
+będziesz mógł go wykorzystać do przywrócenia poprzedniej wersji bazy**
 
 1. Sprawdź, czy baza jest widoczna w panelu `Przeglądarka`.
-![Migracja](2_Aktualizacja_migracja_db_1.png) 
 2. Z menu `Wtyczki` wybierz `as-square` a następnie `Migruj bazę danych`.
 3. Z rozwijanej listy wybierz bazę, która powinna zostać zaktualizowana.
 4. Kliknij przycisk `OK`.
