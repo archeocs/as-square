@@ -136,15 +136,68 @@ będziesz mógł go wykorzystać do przywrócenia poprzedniej wersji bazy**
 5. Jeżeli migracja zakończyła się powodzeniem, zostanie wyświetlony komunikat 
 `Migracja zakończona sukcesem`.
 ![Migracja](2_Aktualizacja_migracja_db_sukces.png)
-
-## Pierwsze użycie
-
-[TBD]
+6. Zamknij program QGIS i uruchom ponownie.
 
 ## Dodawanie informacji
 
-[TBD]
+Działanie wtyczki polega na zapisywaniu danych wprowadzonych w formularzu razem ze 
+współrzędnymi z wybranego kwadratu analitycznego na warstwie wektorowej `AS_RECORDS`.
+Po zapisaniu dane są gotowe do prowadzenia dowolnych analiz, które są wspierane 
+przez program QGIS.
+
+Dla każdego kwadratu informacje mogą być wprowadzane wielokrotnie (np. jeżeli badania
+są powtarzane co pewien okres czasu).
+
+### Dodawanie podstawowych informacji
+
+1. Uruchom wtyczkę klikając w menu `Wtyczki` > `as-square` > `as-square`.
+2. Na liście warstw wybierz warstwę z siatką kwadratów (`GRID_10_M` albo `GRID_50_M`).
+3. Na warstwie zaznacz wybranych jeden kwadrat.
+4. W formularzu wtyczki w polu `Kwadrat` zostanie wyświetlony identyfikator kwadratu
+   (odczytany z atrybutu `SQUARE_ID`).
+5. W formularzu wprowadz pozostałe informacje. Wszystkie pola są **nieobowiązkowe**.
+6. Wprowadź informacje o klasyfikacji kulturowo-historycznej klikając przycisk 
+   `Uruchom edytor` przy polu `Klasyfikacja`.
+7. Kliknij przycisk `Dodaj`, aby zapisać wprowadzone informacje na warstwie `AS_RECORDS`.
+
+### Dodawanie informacji o klasyfikacji kulturowo-historycznej
+
+1. Po kliknięciu w przycisk `Uruchom edytor` w nowym oknie zostaje wyświetlona tabelka 
+   do wprowadzania klasyfikacji kulturowo-historycznej
+2. Klikinj przycisk `+` aby dodać do tabeli nowy wiersz.
+3. Wprowadź informacje w kolumnach.
+4. W kolumnach `Chronologia` wprowadź informacje o chronologii: 
+
+   * Jeżeli chronologia rozciąga się między dwoma okresami, wprowadź pierwszy okres w 
+     pierwszej kolumnie, drugi okres w drugiej kolumnie. W kolumnie `+/-` wybierz `-`
+   
+   * Jeżeli chronologia przypada na przełom dwóch okresów, , wprowadź pierwszy okres w 
+     pierwszej kolumnie, drugi okres w drugiej kolumnie. W kolumnie `+/-` wybierz `/`
+     
+   * Jeżeli chronologia przypada na jeden okres, wprowadź go w pierwsze kolumnie. Drugą 
+     kolumnę pozostaw pustą
+     
+   * Jeżeli określenie chronologii jest niepewne wprowadź wartość `?` w kolumnie `?`.
+   
+5. W kolumnach `Kultura` wprowadź informacje o kulturach archeologicznych.
+6. Wprowadź ilość poszczególnych typów artefaktów.
+7. Aby dodać kolejny wiersz wróć do kroku 2. 
+8. Aby usunąć wiersz zaznacz go w tabeli i kliknij przycisk `-`.
+9. Aby zatwierdzić zmiany kliknij przycisk `Ok`.
+10. Aby odrzucić wszystkie zmiany kliknij przycisk `Anuluj`.
 
 ## Aktualizacja informacji
  
-[TBD]
+Informacje zapisane na warstwie `AS_RECORDS` mogą być edytowane na tej samej 
+zasadzie, jak zostały dodane.
+
+1. Uruchom wtyczkę klikając w menu `Wtyczki` > `as-square` > `as-square`.
+2. Na liście warstw wybierz warstwę `AS_RECORDS`.
+3. Na warstwie wybierz jeden kwadrat. Jeżeli pod danym kwadratem jest zapisanych
+   więcej informacji, wyboru kwadratu można dokonać w tabeli atrybutów, którą 
+   QGIS wyświetla dla wybranej warstwy.
+4. Na formularzu wtyczki wyświetlają się wartości zapisane pod wybranym kwadratem.
+5. Wprowadź niezbędne zmiany w formularzu.
+6. Zmień informacje o klasyfikacji kulturowo-historycznej jeżeli to konieczne.
+7. Kliknij przycisk `Aktualizuj` aby zatwierdzić wprowadzone zmiany. 
+
