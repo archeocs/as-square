@@ -59,9 +59,9 @@ liście gotowych do instalacji.
 Działanie wtyczki polega na zapisywaniu danych w przestrzennej bazie danych. Wtyczka jest
 dostosowana do pracy z bazą [Spatialite](https://www.gaia-gis.it/fossil/libspatialite/home).
 Każdorazowo przed rozpoczęciem pracy z wtyczką `AS-SQUARE` konieczne jest wczytanie z 
-przestrzennej bazy danych odpowiedniej warstwy wektorowej o nazwie `AS_RECORDS`. 
+przestrzennej bazy danych odpowiedniej warstwy wektorowej o nazwie `AS_SQUARES`. 
 
-Bazę danych z warstwą `AS_RECORDS` można pobrać 
+Bazę danych z warstwą `AS_SQUARES` można pobrać 
 [klikając na link](https://github.com/archeocs/as-square/releases/latest/download/empty-db.zip) 
 
 Praca metodą kwadratów analitycznych polega na dodawaniu informacji archeologicznych dla
@@ -141,7 +141,7 @@ będziesz mógł go wykorzystać do przywrócenia poprzedniej wersji bazy**
 ## Dodawanie informacji
 
 Działanie wtyczki polega na zapisywaniu danych wprowadzonych w formularzu razem ze 
-współrzędnymi z wybranego kwadratu analitycznego na warstwie wektorowej `AS_RECORDS`.
+współrzędnymi z wybranego kwadratu analitycznego na warstwie wektorowej `AS_SQUARES`.
 Po zapisaniu dane są gotowe do prowadzenia dowolnych analiz, które są wspierane 
 przez program QGIS.
 
@@ -158,7 +158,7 @@ są powtarzane co pewien okres czasu).
 5. W formularzu wprowadz pozostałe informacje. Wszystkie pola są **nieobowiązkowe**.
 6. Wprowadź informacje o klasyfikacji kulturowo-historycznej klikając przycisk 
    `Uruchom edytor` przy polu `Klasyfikacja`.
-7. Kliknij przycisk `Dodaj`, aby zapisać wprowadzone informacje na warstwie `AS_RECORDS`.
+7. Kliknij przycisk `Dodaj`, aby zapisać wprowadzone informacje na warstwie `AS_SQUARES`.
 
 ### Dodawanie informacji o klasyfikacji kulturowo-historycznej
 
@@ -188,11 +188,11 @@ są powtarzane co pewien okres czasu).
 
 ## Aktualizacja informacji
  
-Informacje zapisane na warstwie `AS_RECORDS` mogą być edytowane na tej samej 
+Informacje zapisane na warstwie `AS_SQUARES` mogą być edytowane na tej samej 
 zasadzie, jak zostały dodane.
 
 1. Uruchom wtyczkę klikając w menu `Wtyczki` > `as-square` > `as-square`.
-2. Na liście warstw wybierz warstwę `AS_RECORDS`.
+2. Na liście warstw wybierz warstwę `AS_SQUARES`.
 3. Na warstwie wybierz jeden kwadrat. Jeżeli pod danym kwadratem jest zapisanych
    więcej informacji, wyboru kwadratu można dokonać w tabeli atrybutów, którą 
    QGIS wyświetla dla wybranej warstwy.
@@ -201,3 +201,12 @@ zasadzie, jak zostały dodane.
 6. Zmień informacje o klasyfikacji kulturowo-historycznej jeżeli to konieczne.
 7. Kliknij przycisk `Aktualizuj` aby zatwierdzić wprowadzone zmiany. 
 
+## Analizy przestrzenne
+
+Przestrzenna baza danych używana we wtyczce `as-square` zawiera tabelę `AS_RECORDS`.
+Tabela `AS_RECORDS` może być wykorzystana do analizy przestrzennej, w której musi być 
+uwzględniona klasyfikacja kulturowo-historyczna. 
+
+Tabela `AS_RECORDS` jest aktualizowana automatycznie przez wtyczkę `as-square`, 
+gdy zmienia się tabela `AS_SQUARES` albo tabela `AS_SOURCES` i bezpośrednia modyfikacja 
+jej zawartości jest niemożliwa. 

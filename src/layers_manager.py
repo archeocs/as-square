@@ -5,7 +5,6 @@ from items import *
 
 SQUARES_LAYER = 'AS_SQUARES'
 SOURCES_LAYER = 'AS_SOURCES'
-VIEW_LAYER = 'AS_RECORDS'
 GRID_LAYER = 'GRID_50_M'
 GRID_10M_LAYER = 'GRID_10_M'
 
@@ -69,41 +68,39 @@ class LayersManager:
 
     def initRecordsLayer(self):
         self.initDataLayers()
-        self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=VIEW_LAYER, initFunc=self.initDataLayers))
+        self.qgsProj.layersAdded.connect(partial(self.onLayerLoaded, name=SQUARES_LAYER, initFunc=self.initDataLayers))
         self.qgsProj.layerWillBeRemoved[QgsMapLayer].connect(
             partial(self.onLayerUnloaded,
-                    name=VIEW_LAYER,
+                    name=SQUARES_LAYER,
                     oper=self.removedViewLayer
                     )
         )
 
     def removedViewLayer(self, lay):
         self.log.info('Event: layer removed {}', lay.name())
-        if self.records:
+        if self.squares:
             self.squares = None
             self.sources = None
-            self.records = None
             self.managed.remove(lay.name().upper())
             self.txManager.layers.clear()
             self.emit('records_removed')
 
     def isReady(self):
-        return self.records and self.squares and self.sources
+        return self.squares and self.sources
 
     def initDataLayers(self):
         self.log.info('Init data layers')
-        self.records = self.getLayer(VIEW_LAYER)
-        if self.records:
-            self.squares = self.getOrLoad(SQUARES_LAYER, self.records, 'geometry')
-            self.sources = self.getOrLoad(SOURCES_LAYER, self.records)
+        self.squares = self.getLayer(SQUARES_LAYER)
+        if self.squares:
+            self.sources = self.getOrLoad(SOURCES_LAYER, self.squares)
             self.addLayerAttrs(self.squares)
             self.addLayerAttrs(self.sources)
             self.recordAttrs = self.initAttrs(RECORD_ATTRS)
             self.sourceAttrs = self.initAttrs(SOURCE_ATTRS)
-            self.managed.add(VIEW_LAYER)
+            self.managed.add(SQUARES_LAYER)
             self.txManager.layers.append(self.squares)
             self.txManager.layers.append(self.sources)
-            self.records.selectionChanged.connect(partial(self.gridSelected, layer=self.records, sources=True))
+            self.squares.selectionChanged.connect(partial(self.gridSelected, layer=self.squares, sources=True))
             return True
         return False
 
@@ -234,7 +231,6 @@ class LayersManager:
         return v
 
     def getLayer(self, name, otherLayer=None):
-        stdName = name.upper()
         for v in self.qgsProj.mapLayers().values():
             if v.isValid() and isVector(v) and equalIgnoreCase(name, v.name()) and (not otherLayer or sameDb(otherLayer, v)):
                 return v
@@ -351,8 +347,8 @@ class LayersManager:
             sf.setId(squareId)
             self.sources.addFeature(sf)
         saved = self.txManager.commit()
-        self.records.dataProvider().forceReload()
-        count = self.records.featureCount()
+        self.squares.dataProvider().forceReload()
+        count = self.squares.featureCount()
         sqCount = self.squares.featureCount()
         if saved:
             self.log.info('Feature added: {}. Rec count: {}, Squares count: {} ', str(saved),  count, sqCount)
