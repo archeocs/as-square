@@ -116,12 +116,12 @@
     <message>
         <location filename="../main.py" line="55"/>
         <source>removed_as_records_warning</source>
-        <translation>Usunięta warstwa AS_RECORD. Proszę dodać warstwę ponownie</translation>
+        <translation>Usunięta warstwa AS_SQUARES. Proszę dodać warstwę ponownie</translation>
     </message>
     <message>
         <location filename="../main.py" line="55"/>
         <source>missing_as_records_warning</source>
-        <translation>Nie mogę dodać nowego kwadratu. Sprawdź, czy warstwa AS_RECORDS jest załadowana i spróbuj ponownie</translation>
+        <translation>Nie mogę dodać nowego kwadratu. Sprawdź, czy warstwa AS_SQUARES jest załadowana i spróbuj ponownie</translation>
     </message>
     <message>
         <location filename="../main.py" line="55"/>

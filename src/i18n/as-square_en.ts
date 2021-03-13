@@ -121,12 +121,12 @@
     <message>
         <location filename="../main.py" line="55"/>
         <source>removed_as_records_warning</source>
-        <translation>Removed layer AS_RECORD. Please add layer to project</translation>
+        <translation>Removed layer AS_SQUARES. Please add layer to project</translation>
     </message>
     <message>
         <location filename="../main.py" line="55"/>
         <source>missing_as_records_warning</source>
-        <translation>Can't add new record. Check if layer AS_RECORDS is added to project and try again</translation>
+        <translation>Can't add new record. Check if layer AS_SQUARES is added to project and try again</translation>
     </message>
     <message>
         <location filename="../main.py" line="55"/>
