@@ -64,12 +64,11 @@ class AsSquareWidget(QDockWidget):
         lay = QVBoxLayout(self)
         self.status = QStatusBar(self)
         self.form = formWidget(log, wgt)
-        lay.addWidget(self.createActions(['add_square', 'update_square']))
+        lay.addWidget(self.createActions(['save_item']))
         lay.addWidget(self.form)
         lay.addWidget(self.status, alignment=Qt.AlignBottom)
         wgt.setLayout(lay)
-        self.actionsMap['add_square'].pressed.connect(self.addAction)
-        self.actionsMap['update_square'].pressed.connect(self.updateAction)
+        self.actionsMap['save_item'].pressed.connect(self.saveAction)
 
         self.setWidget(wgt)
 
@@ -85,17 +84,19 @@ class AsSquareWidget(QDockWidget):
                                             Qgis.Warning)
         self.form.setItem(None)
 
-    def addAction(self):
-        itNew = self.form.mergeItem(self.layersMgr.selectedItem())
-        if self.layersMgr.isReady():
-            self.layersMgr.addItem(itNew)
-        else:
+    def saveAction(self):
+        selected = self.layersMgr.selectedItem()
+        if selected and self.layersMgr.isReady():
+            itSave = self.form.mergeItem(selected)
+            if selected.sourceType == 'grid':
+                self.layersMgr.addItem(itSave)
+            elif selected.sourceType == 'squares':
+                self.layersMgr.updateItem(itSave)
+        elif not self.layersMgr.isReady():
             self.iface.messageBar().pushMessage(tr('missing_as_records_warning'),
                                             Qgis.Warning)
-
-    def updateAction(self):
-        itUpdt = self.form.mergeItem(self.layersMgr.selectedItem())
-        self.layersMgr.updateItem(itUpdt)
+        else:
+            self.log.info('No items selected')
 
     def createActions(self, actions):
         self.actionsMap = {}

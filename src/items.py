@@ -46,10 +46,11 @@ EXCLUDE_NAMES = ['id']
 
 class GeoItem:
 
-    def __init__(self, attrs, geom, ident=None):
+    def __init__(self, attrs, geom, ident=None, sourceType='grid'):
         self.attrs = attrs
         self.geometry = geom
         self.ident = ident
+        self.sourceType = sourceType
 
     def value(self, name):
         ln = name.lower()

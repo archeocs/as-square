@@ -172,7 +172,6 @@ class LayersManagerTest(unittest.TestCase):
 
     def test_selected_feature_item_event_triggered(self):
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(),
-                                 # 'as_squares': Layer(name='as_squares', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         items = []
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
@@ -185,10 +184,10 @@ class LayersManagerTest(unittest.TestCase):
 
         self.assertEqual(items[0].ident, feat_item[1].ident)
         self.assertDictEqual(items[0].attrs, feat_item[1].attrs)
+        self.assertEqual(items[0].sourceType, 'grid')
 
     def test_selected_record_item_event_triggered(self):
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(),
-                             #     'as_squares': Layer(name='as_squares', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         items = []
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
@@ -200,10 +199,10 @@ class LayersManagerTest(unittest.TestCase):
 
         self.assertEqual(items[0].ident, feat_item[1].ident)
         self.assertDictEqual(items[0].attrs, feat_item[1].attrs)
+        self.assertEqual(items[0].sourceType, 'squares')
 
     def test_selected_feature_current_item(self):
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(),
-                               #   'as_squares': Layer(name='as_squares', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         items = []
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
@@ -212,11 +211,12 @@ class LayersManagerTest(unittest.TestCase):
         feat_item = self.feat_item()
         qgsProj.layers['grid_50_m'].handlers['selection_changed']([feat_item[0]],'b','c')
 
-        self.assertEqual(man.selectedItem().ident, feat_item[1].ident)
+        current = man.selectedItem()
+        self.assertEqual(current.ident, feat_item[1].ident)
+        self.assertEqual(current.sourceType, 'grid')
 
     def test_selected_record_current_item(self):
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(),
-                             #     'as_squares': Layer(name='as_squares', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         items = []
         man = LayersManager(qgsProj, StdOutLogAdapter(), defaultLayerFactory)
@@ -225,7 +225,9 @@ class LayersManagerTest(unittest.TestCase):
         feat_item = self.feat_item()
         qgsProj.layers['AS_SQUARES'].handlers['selection_changed']([feat_item[0]],'b','c')
 
-        self.assertEqual(man.selectedItem().ident, feat_item[1].ident)
+        current = man.selectedItem()
+        self.assertEqual(current.ident, feat_item[1].ident)
+        self.assertEqual(current.sourceType, 'squares')
 
 
     def test_init_layer_sources_loaded(self):
@@ -333,7 +335,6 @@ class LayersManagerTest(unittest.TestCase):
         def layerFactory(s):
             return Layer(name=s)
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(fields=['square']),
-                                #  'as_squares': Layer(name='as_squares', fields=['square']),
                                   'as_sources': Layer(name='as_sources', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
@@ -349,7 +350,6 @@ class LayersManagerTest(unittest.TestCase):
         def layerFactory(s):
             return Layer(name=s)
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(),
-                              #    'as_squares': Layer(name='as_squares', fields=['square']),
                                   'as_sources': Layer(name='as_sources', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
@@ -364,7 +364,6 @@ class LayersManagerTest(unittest.TestCase):
         def layerFactory(s):
             return Layer(name=s)
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(),
-                                  #'as_squares': Layer(name='as_squares', fields=['square']),
                                   'as_sources': Layer(name='as_sources', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)
@@ -380,7 +379,6 @@ class LayersManagerTest(unittest.TestCase):
         def layerFactory(s):
             return Layer(name=s)
         qgsProj = QgsProj(layers={'AS_SQUARES': Layer(fields=['square']),
-                                 # 'as_squares': Layer(name='as_squares', fields=['square']),
                                   'as_sources': Layer(name='as_sources', fields=['square']),
                                   'grid_50_m': Layer(name='grid_50_m')})
         man = LayersManager(qgsProj, StdOutLogAdapter(), layerFactory)

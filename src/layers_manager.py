@@ -100,7 +100,8 @@ class LayersManager:
             self.managed.add(SQUARES_LAYER)
             self.txManager.layers.append(self.squares)
             self.txManager.layers.append(self.sources)
-            self.squares.selectionChanged.connect(partial(self.gridSelected, layer=self.squares, sources=True))
+            self.squares.selectionChanged.connect(partial(self.gridSelected, 
+                layer=self.squares, sources=True, sourceType='squares'))
             return True
         return False
 
@@ -125,9 +126,9 @@ class LayersManager:
     def isNotNull(self, v):
         return str(v) != 'NULL'
 
-    def toItem2(self, feat, sources):
+    def toItem2(self, feat, sources, sourceType):
         self.log.info('Id: {}', feat.id())
-        base = GeoItem(dict(self.recordAttrs), feat.geometry(), feat.id())
+        base = GeoItem(dict(self.recordAttrs), feat.geometry(), feat.id(), sourceType)
         names = feat.fields().names()
         for n in names:
             value = feat[n]
@@ -155,12 +156,13 @@ class LayersManager:
             items.append(git)
         return items
 
-    def gridSelected(self, selected, deselected, clear, layer, sources=False):
+    def gridSelected(self, selected, deselected, clear, layer, sources=False, sourceType='grid'):
         if len(selected) == 1:
             self.log.info('Selected')
             feat = layer.getFeature(selected[0])
-            self.txManager.item = self.toItem2(feat, sources)
-            self.log.info('{}', self.txManager.item.attrs)
+            self.txManager.item = self.toItem2(feat, sources, sourceType)
+            self.log.info('{} sourceType={}', self.txManager.item.attrs,
+                self.txManager.item.sourceType)
             self.emit('item_selected', self.txManager.item)
             self.emit('grid_selected', feat)
         elif len(selected) > 1:
@@ -241,7 +243,7 @@ class LayersManager:
         if self.txManager.item:
             item = self.txManager.item
             return GeoItem(dict(item.attrs),
-                           item.geometry, item.ident)
+                           item.geometry, item.ident, item.sourceType)
         return None
 
     def updateFeature(self, feat, item):

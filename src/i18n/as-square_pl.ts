@@ -105,13 +105,8 @@
     </message>
     <message>
         <location filename="../main.py" line="55"/>
-        <source>add_square</source>
-        <translation>Dodaj</translation>
-    </message>
-    <message>
-        <location filename="../main.py" line="55"/>
-        <source>update_square</source>
-        <translation>Aktualizuj</translation>
+        <source>save_item</source>
+        <translation>Zapisz</translation>
     </message>
     <message>
         <location filename="../main.py" line="55"/>
