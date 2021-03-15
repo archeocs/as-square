@@ -115,6 +115,11 @@
     </message>
     <message>
         <location filename="../main.py" line="55"/>
+        <source>reset_item</source>
+        <translation>Reset</translation>
+    </message>
+    <message>
+        <location filename="../main.py" line="55"/>
         <source>removed_as_records_warning</source>
         <translation>Removed layer AS_SQUARES. Please add layer to project</translation>
     </message>

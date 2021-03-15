@@ -64,12 +64,12 @@ class AsSquareWidget(QDockWidget):
         lay = QVBoxLayout(self)
         self.status = QStatusBar(self)
         self.form = formWidget(log, wgt)
-        lay.addWidget(self.createActions(['save_item']))
+        lay.addWidget(self.createActions(['save_item', 'reset_item']))
         lay.addWidget(self.form)
         lay.addWidget(self.status, alignment=Qt.AlignBottom)
         wgt.setLayout(lay)
         self.actionsMap['save_item'].pressed.connect(self.saveAction)
-
+        self.actionsMap['reset_item'].pressed.connect(self.resetAction)
         self.setWidget(wgt)
 
         self.layersMgr = LayersManager(QgsProject.instance(),
@@ -83,6 +83,11 @@ class AsSquareWidget(QDockWidget):
         self.iface.messageBar().pushMessage(tr('removed_as_records_warning'),
                                             Qgis.Warning)
         self.form.setItem(None)
+
+    def resetAction(self):
+        selected = self.layersMgr.selectedItem()
+        if selected:
+            self.form.setItem(selected)
 
     def saveAction(self):
         selected = self.layersMgr.selectedItem()

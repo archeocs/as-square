@@ -110,6 +110,11 @@
     </message>
     <message>
         <location filename="../main.py" line="55"/>
+        <source>reset_item</source>
+        <translation>Resetuj</translation>
+    </message>
+    <message>
+        <location filename="../main.py" line="55"/>
         <source>removed_as_records_warning</source>
         <translation>Usunięta warstwa AS_SQUARES. Proszę dodać warstwę ponownie</translation>
     </message>
