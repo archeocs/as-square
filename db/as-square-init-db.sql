@@ -1,3 +1,7 @@
+-- Copyright (c) Miłosz Pigłas <milosz@archeocs.com> 2020-2021
+--
+-- Licensed under the European Union Public Licence
+
 CREATE TABLE AS_SETTINGS (
   SKEY TEXT PRIMARY KEY,
   SVALUE TEXT NOT NULL

@@ -7,6 +7,11 @@ survey and make it ready for spatial analysis.
 
 `as-square` always support [QGIS Long Term Releases](https://qgis.org/en/site/getinvolved/development/roadmap.html#release-schedule). 
 
+## Licence
+
+`as-square` is licensed under [European Union Public Licence](LICENCE.md). Running program means
+acceptance of provisions of this licence.
+
 ## Installation
 
 `as-square` can be installed with QGIS plugins manager. Every time new version is 

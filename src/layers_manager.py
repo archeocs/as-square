@@ -1,3 +1,7 @@
+# Copyright (C) Miłosz Pigłas <milosz@archeocs.com>
+#
+# Licensed under the European Union Public Licence
+
 from qgis.core import *
 from functools import partial
 

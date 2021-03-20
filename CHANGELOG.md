@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## 0.11.0
+
+ - feat: AS_SQUARES layer as information source
+ - feat: Save new features and modfications with "Save" button.
+ - feat: reset feature to saved state
+
 ## 0.10.0
 
  - feat: user can set more classification details

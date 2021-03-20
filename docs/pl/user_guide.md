@@ -8,6 +8,14 @@ analitycznych.
 Informacje zapisane w przestrzennej bazie danych [Spatialite](https://www.gaia-gis.it/fossil/libspatialite/home) wczytane 
 w QGIS jako warstwa wektorowa mogą być wykorzystane do analiz przestrzennych.
 
+## Licencja
+
+Wtyczka `AS-SQUARE` jest udostępniana na warunkach [Licencji Publicznej Unii Europejskiej](https://github.com/archeocs/as-square/LICENCE-PL.md).
+Uruchomienie wtyczki oznacza akceptację jej postanowień.
+
+Program jest udostępniany bez żadnych gwarancji. Autorzy nie biorą odpowiedzialności za
+szkody powstałe w wyniku użytokwania programu.
+
 ## Instalacja
 
 Wtyczkę `AS-SQUARE` można zainstalować przy pomocy mechanizmu obsługi wtyczek, 
