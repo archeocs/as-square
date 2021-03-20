@@ -10,7 +10,7 @@ w QGIS jako warstwa wektorowa mogą być wykorzystane do analiz przestrzennych.
 
 ## Licencja
 
-Wtyczka `AS-SQUARE` jest udostępniana na warunkach [Licencji Publicznej Unii Europejskiej](https://github.com/archeocs/as-square/LICENCE-PL.md).
+Wtyczka `AS-SQUARE` jest udostępniana na warunkach [Licencji Publicznej Unii Europejskiej](https://github.com/archeocs/as-square/blob/main/LICENCE-PL.md).
 Uruchomienie wtyczki oznacza akceptację jej postanowień.
 
 Program jest udostępniany bez żadnych gwarancji. Autorzy nie biorą odpowiedzialności za
